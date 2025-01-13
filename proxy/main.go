@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/brianvoe/gofakeit"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
@@ -168,23 +169,28 @@ func createTableBook(db *sql.DB) {
 		block BOOLEAN,
 		take_count INT DEFAULT 0
 	);`
+
+	var authors []string
+	for i := 0; i < 10; i++ {
+		author := gofakeit.Name()
+		authors = append(authors, author)
+	}
 	_, err := db.Exec(table)
 	if err != nil {
 		log.Fatalf("Error running migrations: %v", err)
 	}
-	books := []repository.Book{
-		{Book: "Книга 1", Author: "Автор 1", Block: false},
-		{Book: "Книга 2", Author: "Автор 2", Block: false},
-		{Book: "Книга 3", Author: "Автор 3", Block: false},
-		{Book: "Книга 4", Author: "Автор 4", Block: false},
-		{Book: "Книга 5", Author: "Автор 5", Block: false},
-		{Book: "Книга 6", Author: "Автор 6", Block: false},
-		{Book: "Книга 7", Author: "Автор 7", Block: false},
-		{Book: "Книга 8", Author: "Автор 8", Block: false},
-		{Book: "Книга 9", Author: "Автор 9", Block: false},
-		{Book: "Книга 10", Author: "Автор 10", Block: false},
+	var books []repository.Book
+	for i := 0; i < 100; i++ {
+		book := repository.Book{
+			Book:      gofakeit.Sentence(1),                        // Генерация названия книги
+			Author:    authors[gofakeit.Number(0, len(authors)-1)], // Случайный автор
+			Block:     false,                                       // Устанавливаем значение блокировки
+			TakeCount: 0,                                           // Начальное значение take_count
+		}
+		books = append(books, book) // Добавляем книгу в массив
 	}
 
+	// Вставка книг в базу данных
 	for _, b := range books {
 		_, err := db.Exec("INSERT INTO book (book, author, block) VALUES ($1, $2, $3)", b.Book, b.Author, b.Block)
 		if err != nil {

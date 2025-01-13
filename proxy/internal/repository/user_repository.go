@@ -76,7 +76,7 @@ func (r *PostgresUserRepository) List(ctx context.Context, limit, offset int) ([
 }
 
 func (r *PostgresBookRepository) MList(ctx context.Context, limit, offset int) ([]Book, error) {
-	query := "SELECT index, book, author, block FROM book WHERE block = FALSE LIMIT $1 OFFSET $2"
+	query := "SELECT index, book, author, block, take_count FROM book WHERE block = FALSE LIMIT $1 OFFSET $2"
 	rows, err := r.db.QueryContext(ctx, query, limit, offset)
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func (r *PostgresBookRepository) MList(ctx context.Context, limit, offset int) (
 	var books []Book
 	for rows.Next() {
 		var book Book
-		if err := rows.Scan(&book.Index, &book.Book, &book.Author, &book.Block); err != nil {
+		if err := rows.Scan(&book.Index, &book.Book, &book.Author, &book.Block, &book.TakeCount); err != nil {
 			return nil, err
 		}
 		books = append(books, book)
