@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -279,20 +280,18 @@ func searchHandler(resp controller.Responder, geoService service.GeoProvider) ht
 // @Failure 400 {object} mErrorResponse "Ошибка запроса"
 // @Failure 500 {object} mErrorResponse "Ошибка подключения к серверу"
 // @Security BearerAuth
-// @Router /api/book/take [post]
+// @Router /api/book/take/{index} [post]
 func takeBookHandler(resp controller.Responder, db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req struct {
-			Index int `json:"index"`
-		}
-
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			resp.ErrorBadRequest(w, err)
+		indexStr := chi.URLParam(r, "index") // Используйте chi или другой роутер для извлечения параметра
+		index, err := strconv.Atoi(indexStr) // Преобразование строки в int
+		if err != nil {
+			resp.ErrorBadRequest(w, errors.New("invalid index"))
 			return
 		}
 
 		// Обновление записи в таблице book
-		result, err := db.Exec("UPDATE book SET block = $1, take_count = take_count + 1 WHERE index = $2 AND block = $3", true, req.Index, false)
+		result, err := db.Exec("UPDATE book SET block = $1, take_count = take_count + 1 WHERE index = $2 AND block = $3", true, index, false)
 		if err != nil {
 			resp.ErrorInternal(w, err)
 			return
@@ -321,7 +320,7 @@ func router(userController *control.UserController, resp controller.Responder, g
 	r.Delete("/api/users/{id}", userController.DeleteUser) // Удаление пользователя
 	r.Get("/api/users", userController.ListUsers)
 
-	r.Post("/api/book/take", takeBookHandler(resp, db))
+	r.Post("/api/book/take/{index}", takeBookHandler(resp, db))
 	r.Get("/api/book", bookController.ListBook)
 
 	// Используем обработчики с middleware

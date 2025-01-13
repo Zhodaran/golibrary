@@ -172,7 +172,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/book/take": {
+        "/api/book/take/{index}": {
             "post": {
                 "security": [
                     {

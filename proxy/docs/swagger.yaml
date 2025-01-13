@@ -222,7 +222,7 @@ paths:
       summary: List SQL book
       tags:
       - TakeBook
-  /api/book/take:
+  /api/book/take/{index}:
     post:
       consumes:
       - application/json
