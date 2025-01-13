@@ -18,7 +18,7 @@ type Book struct {
 }
 
 type BookRepository interface {
-	MList(ctx context.Context, limit, offset int) ([]User, error)
+	MList(ctx context.Context, limit, offset int) ([]Book, error)
 }
 
 // UserRepository определяет методы для работы с пользователями

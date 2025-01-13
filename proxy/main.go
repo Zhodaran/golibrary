@@ -109,7 +109,7 @@ func main() {
 	createTableBook(db)
 
 	userRepo := repository.NewPostgresUserRepository(db)
-	BookRepo := repository.NewPostgresUserRepository(db)
+	BookRepo := repository.NewPostgresBookRepository(db)
 	userController := control.NewUserController(userRepo)
 	bookController := control.NewBookController(BookRepo)
 

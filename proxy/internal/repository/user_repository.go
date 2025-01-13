@@ -15,6 +15,14 @@ func NewPostgresUserRepository(db *sql.DB) *PostgresUserRepository {
 	return &PostgresUserRepository{db: db}
 }
 
+type PostgresBookRepository struct {
+	db *sql.DB
+}
+
+func NewPostgresBookRepository(db *sql.DB) *PostgresBookRepository {
+	return &PostgresBookRepository{db: db}
+}
+
 // Create добавляет нового пользователя в базу данных
 func (r *PostgresUserRepository) Create(ctx context.Context, user User) error {
 	query := "INSERT INTO users (id, name, email) VALUES ($1, $2, $3)"
@@ -67,7 +75,7 @@ func (r *PostgresUserRepository) List(ctx context.Context, limit, offset int) ([
 	return users, nil
 }
 
-func (r *PostgresUserRepository) MList(ctx context.Context, limit, offset int) ([]User, error) {
+func (r *PostgresBookRepository) MList(ctx context.Context, limit, offset int) ([]Book, error) {
 	query := "SELECT index, book, author, block FROM book WHERE block = FALSE LIMIT $1 OFFSET $2"
 	rows, err := r.db.QueryContext(ctx, query, limit, offset)
 	if err != nil {
@@ -75,13 +83,13 @@ func (r *PostgresUserRepository) MList(ctx context.Context, limit, offset int) (
 	}
 	defer rows.Close()
 
-	var users []User
+	var books []Book
 	for rows.Next() {
-		var user User
-		if err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.DeletedAt); err != nil {
+		var book Book
+		if err := rows.Scan(&book.Index, &book.Book, &book.Author, &book.Block); err != nil {
 			return nil, err
 		}
-		users = append(users, user)
+		books = append(books, book)
 	}
-	return users, nil
+	return books, nil
 }

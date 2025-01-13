@@ -164,11 +164,11 @@ func (uc *UserController) ListUsers(w http.ResponseWriter, r *http.Request) {
 func (uc *BookController) ListBook(w http.ResponseWriter, r *http.Request) {
 	limit := 10 // Установите значение по умолчанию
 	offset := 0 // Установите значение по умолчанию
-	users, err := uc.BookRepo.MList(context.Background(), limit, offset)
+	books, err := uc.BookRepo.MList(context.Background(), limit, offset)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	json.NewEncoder(w).Encode(CreateResponse{Message: "List successful"})
-	json.NewEncoder(w).Encode(users)
+	json.NewEncoder(w).Encode(books)
 }
