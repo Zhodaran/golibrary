@@ -131,6 +131,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/book": {
+            "get": {
+                "description": "This description created new SQL user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TakeBook"
+                ],
+                "summary": "List SQL book",
+                "responses": {
+                    "200": {
+                        "description": "List successful",
+                        "schema": {
+                            "$ref": "#/definitions/control.CreateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/control.rErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/control.rErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/control.rErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/book/take": {
             "post": {
                 "security": [

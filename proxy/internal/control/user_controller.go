@@ -13,8 +13,16 @@ type UserController struct {
 	userRepo repository.UserRepository
 }
 
+type BookController struct {
+	BookRepo repository.BookRepository
+}
+
 func NewUserController(userRepo repository.UserRepository) *UserController {
 	return &UserController{userRepo: userRepo}
+}
+
+func NewBookController(BookRepo repository.BookRepository) *BookController {
+	return &BookController{BookRepo: BookRepo}
 }
 
 type CreateResponse struct {
@@ -135,6 +143,28 @@ func (uc *UserController) ListUsers(w http.ResponseWriter, r *http.Request) {
 	limit := 10 // Установите значение по умолчанию
 	offset := 0 // Установите значение по умолчанию
 	users, err := uc.userRepo.List(context.Background(), limit, offset)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(CreateResponse{Message: "List successful"})
+	json.NewEncoder(w).Encode(users)
+}
+
+// @Summary List SQL book
+// @Description This description created new SQL user
+// @Tags TakeBook
+// @Accept json
+// @Produce json
+// @Success 200 {object} CreateResponse "List successful"
+// @Failure 400 {object} rErrorResponse "Invalid request"
+// @Failure 401 {object} rErrorResponse "Invalid credentials"
+// @Failure 500 {object} rErrorResponse "Internal server error"
+// @Router /api/book [get]
+func (uc *BookController) ListBook(w http.ResponseWriter, r *http.Request) {
+	limit := 10 // Установите значение по умолчанию
+	offset := 0 // Установите значение по умолчанию
+	users, err := uc.BookRepo.MList(context.Background(), limit, offset)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

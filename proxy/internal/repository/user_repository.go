@@ -66,3 +66,22 @@ func (r *PostgresUserRepository) List(ctx context.Context, limit, offset int) ([
 	}
 	return users, nil
 }
+
+func (r *PostgresUserRepository) MList(ctx context.Context, limit, offset int) ([]User, error) {
+	query := "SELECT index, book, author, block FROM book WHERE block = FALSE LIMIT $1 OFFSET $2"
+	rows, err := r.db.QueryContext(ctx, query, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []User
+	for rows.Next() {
+		var user User
+		if err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.DeletedAt); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
+}

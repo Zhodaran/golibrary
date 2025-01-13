@@ -195,6 +195,33 @@ paths:
       summary: Get Geo Coordinates by Address
       tags:
       - geo
+  /api/book:
+    get:
+      consumes:
+      - application/json
+      description: This description created new SQL user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List successful
+          schema:
+            $ref: '#/definitions/control.CreateResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/control.rErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/control.rErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/control.rErrorResponse'
+      summary: List SQL book
+      tags:
+      - TakeBook
   /api/book/take:
     post:
       consumes:

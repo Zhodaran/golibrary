@@ -106,16 +106,19 @@ func main() {
 	}
 
 	runMigrations(db)
+	createTableBook(db)
 
 	userRepo := repository.NewPostgresUserRepository(db)
+	BookRepo := repository.NewPostgresUserRepository(db)
 	userController := control.NewUserController(userRepo)
+	bookController := control.NewBookController(BookRepo)
 
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 
 	geoService := service.NewGeoService("d9e0649452a137b73d941aa4fb4fcac859372c8c", "ec99b849ebf21277ec821c63e1a2bc8221900b1d") // Создаем новый экземпляр GeoService
 	resp := controller.NewResponder(logger)
-	r := router(userController, resp, geoService, db)
+	r := router(userController, resp, geoService, db, bookController)
 
 	srv := &Server{
 		Server: http.Server{
@@ -299,7 +302,7 @@ func takeBookHandler(resp controller.Responder, db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func router(userController *control.UserController, resp controller.Responder, geoService service.GeoProvider, db *sql.DB) http.Handler {
+func router(userController *control.UserController, resp controller.Responder, geoService service.GeoProvider, db *sql.DB, bookController *control.BookController) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(proxyMiddleware)
@@ -313,6 +316,7 @@ func router(userController *control.UserController, resp controller.Responder, g
 	r.Get("/api/users", userController.ListUsers)
 
 	r.Post("/api/book/take", takeBookHandler(resp, db))
+	r.Get("/api/book", bookController.ListBook)
 
 	// Используем обработчики с middleware
 	r.With(TokenAuthMiddleware(resp)).Post("/api/address/geocode", geocodeHandler(resp, geoService))
