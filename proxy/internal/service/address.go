@@ -87,18 +87,6 @@ type GeoServicer interface {
 	GetGeoCoordinatesGeocode(lat float64, lng float64) (ResponseAddresses, error)
 }
 
-// @Summary Get Geo Coordinates by Address
-// @Description This endpoint allows you to get geo coordinates by address.
-// @Tags geo
-// @Accept json
-// @Produce json
-// @Param address body RequestAddressSearch true "Address search query"
-// @Param Authorization header string true "Bearer {token}"
-// @Success 200 {object} ResponseAddress "Успешное выполнение"
-// @Failure 400 {object} ErrorResponse "Ошибка запроса"
-// @Failure 500 {object} ErrorResponse "Ошибка подключения к серверу"
-// @Security BearerAuth
-// @Router /api/address/search [post]
 func (g *GeoService) GetGeoCoordinatesAddress(query string) (ResponseAddresses, error) {
 	url := "http://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address"
 	reqData := map[string]string{"query": query}
@@ -147,18 +135,6 @@ func (g *GeoService) GetGeoCoordinatesAddress(query string) (ResponseAddresses, 
 	return addresses, nil
 }
 
-// @Summary Get Geo Coordinates by Latitude and Longitude
-// @Description This endpoint allows you to get geo coordinates by latitude and longitude.
-// @Tags geo
-// @Accept json
-// @Produce json
-// @Param body body GeocodeRequest true "Geographic coordinates"
-// @Param Authorization header string true "Bearer {token}"
-// @Success 200 {object} ResponseAddress "Успешное выполнение"
-// @Failure 400 {object} ErrorResponse "Ошибка запроса"
-// @Failure 500 {object} ErrorResponse "Ошибка подключения к серверу"
-// @Security BearerAuth
-// @Router /api/address/geocode [post]
 func (g *GeoService) GetGeoCoordinatesGeocode(lat float64, lng float64) (ResponseAddresses, error) {
 	url := "http://suggestions.dadata.ru/suggestions/api/4_1/rs/geolocate/address"
 	data := map[string]float64{"lat": lat, "lon": lng}

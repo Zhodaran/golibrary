@@ -34,17 +34,6 @@ type User struct {
 	Password string `json:"password"`
 }
 
-// @Summary Register a new user
-// @Description This endpoint allows you to register a new user with a username and password.
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param user body User true "User registration details"
-// @Success 201 {object} TokenResponse "User registered successfully"
-// @Failure 400 {object} ErrorResponse "Invalid request"
-// @Failure 409 {object} ErrorResponse "User already exists"
-// @Failure 500 {object} ErrorResponse "Internal server error"
-// @Router /api/register [post]
 func Register(w http.ResponseWriter, r *http.Request) {
 	var user User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -72,17 +61,6 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// @Summary Login a user
-// @Description This endpoint allows a user to log in with their username and password.
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param user body User true "User login details"
-// @Success 200 {object} LoginResponse "Login successful"
-// @Failure 400 {object} ErrorResponse "Invalid request"
-// @Failure 401 {object} ErrorResponse "Invalid credentials"
-// @Failure 500 {object} ErrorResponse "Internal server error"
-// @Router /api/login [post]
 func Login(w http.ResponseWriter, r *http.Request) {
 	var user User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
