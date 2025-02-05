@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/jwtauth"
 	"golang.org/x/crypto/bcrypt"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/repository"
 )
 
 type LoginResponse struct {
@@ -26,7 +27,8 @@ type ErrorResponse struct {
 
 var (
 	TokenAuth = jwtauth.New("HS256", []byte("your_secret_key"), nil)
-	users     = make(map[string]User) // Хранение пользователей
+	Users     = make(map[string]User) // Хранение пользователей
+
 )
 
 type User struct {
@@ -34,6 +36,22 @@ type User struct {
 	Password string `json:"password"`
 }
 
+type Library struct {
+	Users map[string]*User
+	Books map[string]map[int]repository.Book
+}
+
+// @Summary Register a new user
+// @Description This endpoint allows you to register a new user with a username and password.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param user body User true "User registration details"
+// @Success 201 {object} TokenResponse "User registered successfully"
+// @Failure 400 {object} ErrorResponse "Invalid request"
+// @Failure 409 {object} ErrorResponse "User already exists"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /api/register [post]
 func Register(w http.ResponseWriter, r *http.Request) {
 	var user User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -41,7 +59,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, exists := users[user.Username]; exists {
+	if _, exists := Users[user.Username]; exists {
 		http.Error(w, "User already exists", http.StatusConflict)
 		return
 	}
@@ -52,7 +70,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users[user.Username] = User{
+	Users[user.Username] = User{
 		Username: user.Username,
 		Password: string(hashedPassword),
 	}
@@ -61,6 +79,17 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// @Summary Login a user
+// @Description This endpoint allows a user to log in with their username and password.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param user body User true "User login details"
+// @Success 200 {object} LoginResponse "Login successful"
+// @Failure 400 {object} ErrorResponse "Invalid request"
+// @Failure 401 {object} ErrorResponse "Invalid credentials"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /api/login [post]
 func Login(w http.ResponseWriter, r *http.Request) {
 	var user User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -69,7 +98,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Получаем хешированный пароль пользователя из мапы users
-	storedUser, exists := users[user.Username]
+	storedUser, exists := Users[user.Username]
 	if !exists || bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(user.Password)) != nil {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return

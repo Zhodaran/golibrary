@@ -4,10 +4,11 @@ import "context"
 
 // User представляет собой модель пользователя
 type User struct {
-	ID        int     `json:"id"`
-	Name      string  `json:"name"`
-	Email     string  `json:"email"`
-	DeletedAt *string `json:"deleted_at"` // Для логического удаления
+	ID        int          `json:"id"`
+	Name      string       `json:"name"`
+	Email     string       `json:"email"`
+	DeletedAt *string      `json:"deleted_at"` // Для логического удаления
+	Books     map[int]Book `json:"books"`
 }
 
 type Book struct {
@@ -30,3 +31,5 @@ type UserRepository interface {
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, limit, offset int) ([]User, error)
 }
+
+var Users []User

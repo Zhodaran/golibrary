@@ -19,6 +19,8 @@ type PostgresBookRepository struct {
 	db *sql.DB
 }
 
+var Books []Book
+
 func NewPostgresBookRepository(db *sql.DB) *PostgresBookRepository {
 	return &PostgresBookRepository{db: db}
 }

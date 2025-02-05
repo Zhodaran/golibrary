@@ -1,4 +1,30 @@
 definitions:
+  auth.ErrorResponse:
+    properties:
+      "200":
+        type: string
+      "400":
+        type: string
+      "500":
+        type: string
+    type: object
+  auth.LoginResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  auth.TokenResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  auth.User:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
   control.CreateResponse:
     properties:
       message:
@@ -11,6 +37,12 @@ definitions:
       "400":
         type: string
       "500":
+        type: string
+    type: object
+  main.TakeBookRequest:
+    properties:
+      username:
+        description: Поле для имени пользователя
         type: string
     type: object
   main.mErrorResponse:
@@ -79,8 +111,8 @@ paths:
       summary: List SQL book
       tags:
       - TakeBook
-  /api/book/take/{index}:
-    post:
+  /api/book/return/{index}:
+    delete:
       consumes:
       - application/json
       description: This endpoint allows you to get geo coordinates by address.
@@ -90,6 +122,17 @@ paths:
         name: index
         required: true
         type: integer
+      - description: Username of the user taking the book
+        in: query
+        name: username
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.TakeBookRequest'
       produces:
       - application/json
       responses:
@@ -109,7 +152,118 @@ paths:
       - BearerAuth: []
       summary: Get Geo Coordinates by Address
       tags:
-      - TakeBook
+      - User
+  /api/book/take/{index}:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint allows you to get geo coordinates by address.
+      parameters:
+      - description: Book INDEX
+        in: path
+        name: index
+        required: true
+        type: integer
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/main.TakeBookRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешное выполнение
+          schema:
+            $ref: '#/definitions/service.ResponseAddress'
+        "400":
+          description: Ошибка запроса
+          schema:
+            $ref: '#/definitions/main.mErrorResponse'
+        "500":
+          description: Ошибка подключения к серверу
+          schema:
+            $ref: '#/definitions/main.mErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Geo Coordinates by Address
+      tags:
+      - User
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint allows a user to log in with their username and password.
+      parameters:
+      - description: User login details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/auth.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            $ref: '#/definitions/auth.LoginResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+      summary: Login a user
+      tags:
+      - auth
+  /api/register:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint allows you to register a new user with a username
+        and password.
+      parameters:
+      - description: User registration details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/auth.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User registered successfully
+          schema:
+            $ref: '#/definitions/auth.TokenResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "409":
+          description: User already exists
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - auth
 securityDefinitions:
   BearerAuth:
     in: header
