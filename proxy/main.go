@@ -274,8 +274,6 @@ func searchHandler(resp controller.Responder, geoService service.GeoProvider) ht
 	}
 }
 
-var library auth.Library
-
 type TakeBookRequest struct {
 	Username string `json:"username"` // Поле для имени пользователя
 }
@@ -293,7 +291,7 @@ type TakeBookRequest struct {
 // @Failure 500 {object} mErrorResponse "Ошибка подключения к серверу"
 // @Security BearerAuth
 // @Router /api/book/take/{index} [post]
-func takeBookHandler(resp controller.Responder, db *sql.DB, Books *[]repository.Book) http.HandlerFunc {
+func takeBookHandler(resp controller.Responder, db *sql.DB, Books *[]repository.Book, library *auth.Library) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		indexStr := chi.URLParam(r, "index")
 		index, err := strconv.Atoi(indexStr) // Преобразование строки в int
@@ -368,7 +366,7 @@ func takeBookHandler(resp controller.Responder, db *sql.DB, Books *[]repository.
 // @Failure 500 {object} mErrorResponse "Ошибка подключения к серверу"
 // @Security BearerAuth
 // @Router /api/book/return/{index} [delete]
-func ReturnBook(resp controller.Responder, db *sql.DB, Books *[]repository.Book) http.HandlerFunc {
+func ReturnBook(resp controller.Responder, db *sql.DB, Books *[]repository.Book, library *auth.Library) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		indexStr := chi.URLParam(r, "index")
 		index, err := strconv.Atoi(indexStr) // Преобразование строки в int
@@ -437,9 +435,10 @@ func router(userController *control.UserController, resp controller.Responder, g
 	r.Put("/api/users/{id}", userController.UpdateUser)    // Обновление пользователя
 	r.Delete("/api/users/{id}", userController.DeleteUser) // Удаление пользователя
 	r.Get("/api/users", userController.ListUsers)
+	var library auth.Library
 
-	r.Post("/api/book/take/{index}", takeBookHandler(resp, db, books))
-	r.Delete("/api/book/return/{index}", ReturnBook(resp, db, books))
+	r.Post("/api/book/take/{index}", takeBookHandler(resp, db, books, &library))
+	r.Delete("/api/book/return/{index}", ReturnBook(resp, db, books, &library))
 
 	r.Get("/api/book", bookController.ListBook)
 
