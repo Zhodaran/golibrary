@@ -359,7 +359,7 @@ func takeBookHandler(resp controller.Responder, db *sql.DB, Books *[]repository.
 // @Accept json
 // @Produce json
 // @Param index path int true "Book INDEX"
-// @Param username query string true "Username of the user taking the book"
+// @Param Authorization header string true "Bearer Token"
 // @Param body body TakeBookRequest true "Request body"
 // @Success 200 {object} service.ResponseAddress "Успешное выполнение"
 // @Failure 400 {object} mErrorResponse "Ошибка запроса"

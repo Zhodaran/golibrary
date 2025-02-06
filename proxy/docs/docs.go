@@ -84,9 +84,9 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Username of the user taking the book",
-                        "name": "username",
-                        "in": "query",
+                        "description": "Bearer Token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     },
                     {

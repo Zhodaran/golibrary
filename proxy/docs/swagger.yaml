@@ -122,9 +122,9 @@ paths:
         name: index
         required: true
         type: integer
-      - description: Username of the user taking the book
-        in: query
-        name: username
+      - description: Bearer Token
+        in: header
+        name: Authorization
         required: true
         type: string
       - description: Request body
