@@ -54,6 +54,19 @@ definitions:
       "500":
         type: string
     type: object
+  repository.Book:
+    properties:
+      author:
+        type: string
+      block:
+        type: boolean
+      book:
+        type: string
+      index:
+        type: integer
+      take_count:
+        type: integer
+    type: object
   service.Address:
     properties:
       city:
@@ -84,6 +97,27 @@ info:
   title: Address API
   version: "1.0"
 paths:
+  /api/authors:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint returns a list of all authors from the library.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of authors
+          schema:
+            items:
+              type: string
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.mErrorResponse'
+      summary: Get List of Authors
+      tags:
+      - Books
   /api/book:
     get:
       consumes:
@@ -110,7 +144,80 @@ paths:
             $ref: '#/definitions/control.rErrorResponse'
       summary: List SQL book
       tags:
-      - TakeBook
+      - Books
+    post:
+      consumes:
+      - application/json
+      description: This endpoint allows you to add a new book to the library.
+      parameters:
+      - description: Book details
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/repository.Book'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Book added successfully
+          schema:
+            $ref: '#/definitions/repository.Book'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/main.mErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.mErrorResponse'
+      summary: Add a new book to the library
+      tags:
+      - Books
+  /api/book/{index}:
+    put:
+      consumes:
+      - application/json
+      description: Этот эндпоинт позволяет обновить информацию о книге по индексу.
+      parameters:
+      - description: Индекс книги
+        in: path
+        name: index
+        required: true
+        type: integer
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Обновленная информация о книге
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/repository.Book'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешное обновление книги
+          schema:
+            $ref: '#/definitions/repository.Book'
+        "400":
+          description: Ошибка запроса
+          schema:
+            $ref: '#/definitions/main.mErrorResponse'
+        "404":
+          description: Книга не найдена
+          schema:
+            $ref: '#/definitions/main.mErrorResponse'
+        "500":
+          description: Ошибка сервера
+          schema:
+            $ref: '#/definitions/main.mErrorResponse'
+      summary: Обновление информации о книге
+      tags:
+      - Books
   /api/book/return/{index}:
     delete:
       consumes:
@@ -197,8 +304,6 @@ paths:
       - User
   /api/login:
     post:
-      consumes:
-      - application/json
       description: This endpoint allows a user to log in with their username and password.
       parameters:
       - description: User login details
@@ -262,6 +367,27 @@ paths:
           schema:
             $ref: '#/definitions/auth.ErrorResponse'
       summary: Register a new user
+      tags:
+      - auth
+  /api/users:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint returns a list of all registered users.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of registered users
+          schema:
+            items:
+              $ref: '#/definitions/auth.User'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.mErrorResponse'
+      summary: Get List of Registered Users
       tags:
       - auth
 securityDefinitions:

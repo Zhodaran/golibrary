@@ -14,6 +14,7 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -69,6 +70,17 @@ type Server struct {
 	http.Server
 }
 
+type Library struct {
+	Books map[string][]repository.Book
+	mu    sync.RWMutex
+}
+
+func NewLibrary() *Library {
+	return &Library{
+		Books: make(map[string][]repository.Book),
+	}
+}
+
 func (s *Server) Serve() {
 	log.Println("Starting server...")
 	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -109,6 +121,7 @@ func main() {
 
 	runMigrations(db)
 	books := createTableBook(db)
+	library := NewLibrary()
 
 	userRepo := repository.NewPostgresUserRepository(db)
 	BookRepo := repository.NewPostgresBookRepository(db)
@@ -120,7 +133,7 @@ func main() {
 
 	geoService := service.NewGeoService("d9e0649452a137b73d941aa4fb4fcac859372c8c", "ec99b849ebf21277ec821c63e1a2bc8221900b1d") // Создаем новый экземпляр GeoService
 	resp := controller.NewResponder(logger)
-	r := router(userController, resp, geoService, db, bookController, &books)
+	r := router(userController, resp, geoService, db, bookController, &books, library)
 
 	srv := &Server{
 		Server: http.Server{
@@ -291,10 +304,10 @@ type TakeBookRequest struct {
 // @Failure 500 {object} mErrorResponse "Ошибка подключения к серверу"
 // @Security BearerAuth
 // @Router /api/book/take/{index} [post]
-func takeBookHandler(resp controller.Responder, db *sql.DB, Books *[]repository.Book, library *auth.Library) http.HandlerFunc {
+func takeBookHandler(resp controller.Responder, db *sql.DB, Books *[]repository.Book, library *Library) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		indexStr := chi.URLParam(r, "index")
-		index, err := strconv.Atoi(indexStr) // Преобразование строки в int
+		index, err := strconv.Atoi(indexStr)
 		if err != nil {
 			resp.ErrorBadRequest(w, errors.New("invalid index"))
 			return
@@ -307,8 +320,8 @@ func takeBookHandler(resp controller.Responder, db *sql.DB, Books *[]repository.
 			return
 		}
 
-		found := false
 		var bookFind repository.Book
+		found := false
 
 		// Поиск книги по индексу
 		for i, book := range *Books {
@@ -345,10 +358,7 @@ func takeBookHandler(resp controller.Responder, db *sql.DB, Books *[]repository.
 		}
 
 		// Добавление книги к пользователю
-		if library.Books[requestBody.Username] == nil {
-			library.Books[requestBody.Username] = make(map[int]repository.Book) // Инициализация, если еще не существует
-		}
-		library.Books[requestBody.Username][index] = bookFind
+		library.Books[requestBody.Username] = append(library.Books[requestBody.Username], bookFind)
 		resp.OutputJSON(w, map[string]string{"message": "Book taken successfully"})
 	}
 }
@@ -366,43 +376,47 @@ func takeBookHandler(resp controller.Responder, db *sql.DB, Books *[]repository.
 // @Failure 500 {object} mErrorResponse "Ошибка подключения к серверу"
 // @Security BearerAuth
 // @Router /api/book/return/{index} [delete]
-func ReturnBook(resp controller.Responder, db *sql.DB, Books *[]repository.Book, library *auth.Library) http.HandlerFunc {
+func ReturnBook(resp controller.Responder, db *sql.DB, Books *[]repository.Book, library *Library) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		indexStr := chi.URLParam(r, "index")
-		index, err := strconv.Atoi(indexStr) // Преобразование строки в int
+		index, err := strconv.Atoi(indexStr)
 		if err != nil {
 			resp.ErrorBadRequest(w, errors.New("invalid index"))
 			return
 		}
 
-		// Получаем username из параметров запроса
 		var requestBody TakeBookRequest
 		if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
 			resp.ErrorBadRequest(w, errors.New("invalid request body"))
 			return
 		}
 
-		// Проверка, был ли передан username
 		if requestBody.Username == "" {
 			http.Error(w, "Username is required", http.StatusBadRequest)
 			return
 		}
 
+		userBooks, userExists := library.Books[requestBody.Username]
+		if !userExists {
+			http.Error(w, "User has no books", http.StatusNotFound)
+			return
+		}
+
 		found := false
 		var bookFind repository.Book
-		// Проверяем, есть ли у пользователя книги
-		userBooks, userExists := library.Books[requestBody.Username]
-		if userExists {
-			// Проверяем, есть ли книга с указанным индексом
-			if book, exists := userBooks[index]; exists {
+
+		// Поиск книги у пользователя
+		for i, book := range userBooks {
+			if book.Index == index {
 				bookFind = book
-				delete(userBooks, index) // Удаляем книгу из карты
+				library.Books[requestBody.Username] = append(userBooks[:i], userBooks[i+1:]...) // Удаляем книгу из списка пользователя
 				found = true
+				break
 			}
 		}
 
 		if !found {
-			http.Error(w, fmt.Sprintf("book with index %d not found", index), http.StatusNotFound)
+			http.Error(w, fmt.Sprintf("book with index %d not found for user", index), http.StatusNotFound)
 			return
 		}
 
@@ -413,7 +427,7 @@ func ReturnBook(resp controller.Responder, db *sql.DB, Books *[]repository.Book,
 			return
 		}
 		if rowsAffected, err := result.RowsAffected(); err != nil || rowsAffected == 0 {
-			resp.ErrorBadRequest(w, errors.New("book not found or already taken"))
+			resp.ErrorBadRequest(w, errors.New("book not found or already returned"))
 			return
 		}
 
@@ -423,7 +437,140 @@ func ReturnBook(resp controller.Responder, db *sql.DB, Books *[]repository.Book,
 	}
 }
 
-func router(userController *control.UserController, resp controller.Responder, geoService service.GeoProvider, db *sql.DB, bookController *control.BookController, books *[]repository.Book) http.Handler {
+// @Summary Обновление информации о книге
+// @Description Этот эндпоинт позволяет обновить информацию о книге по индексу.
+// @Tags Books
+// @Accept json
+// @Produce json
+// @Param index path int true "Индекс книги"
+// @Param Authorization header string true "Bearer Token"
+// @Param body body repository.Book true "Обновленная информация о книге"
+// @Success 200 {object} repository.Book "Успешное обновление книги"
+// @Failure 400 {object} mErrorResponse "Ошибка запроса"
+// @Failure 404 {object} mErrorResponse "Книга не найдена"
+// @Failure 500 {object} mErrorResponse "Ошибка сервера"
+// @Router /api/book/{index} [put]
+func updateBook(resp controller.Responder, db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			http.Error(w, "Метод не разрешен", http.StatusMethodNotAllowed)
+			return
+		}
+
+		indexStr := chi.URLParam(r, "index")
+		index, err := strconv.Atoi(indexStr)
+		if err != nil {
+			resp.ErrorBadRequest(w, errors.New("недопустимый индекс"))
+			return
+		}
+
+		var updatedBook repository.Book
+		if err := json.NewDecoder(r.Body).Decode(&updatedBook); err != nil {
+			resp.ErrorBadRequest(w, errors.New("недопустимый формат данных"))
+			return
+		}
+
+		// Обновление записи в таблице book
+		result, err := db.Exec("UPDATE book SET book = $1, author = $2, block = $3 WHERE index = $4",
+			updatedBook.Book, updatedBook.Author, updatedBook.Block, index)
+		if err != nil {
+			resp.ErrorInternal(w, err)
+			return
+		}
+
+		// Проверка, была ли книга успешно обновлена
+		if rowsAffected, err := result.RowsAffected(); err != nil || rowsAffected == 0 {
+			resp.ErrorBadRequest(w, errors.New("книга не найдена или не обновлена"))
+			return
+		}
+
+		// Возвращаем обновленную книгу
+		resp.OutputJSON(w, updatedBook)
+	}
+}
+
+// @Summary Get List of Authors
+// @Description This endpoint returns a list of all authors from the library.
+// @Tags Books
+// @Accept json
+// @Produce json
+// @Success 200 {array} string "List of authors"
+// @Failure 500 {object} mErrorResponse "Internal server error"
+// @Router /api/authors [get]
+func listAuthorsHandler(resp controller.Responder, library *Library) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		library.mu.RLock()         // Блокируем чтение
+		defer library.mu.RUnlock() // Разблокируем чтение после завершения
+
+		authorsSet := make(map[string]struct{}) // Используем множество для уникальных авторов
+
+		// Проходим по всем книгам в библиотеке и собираем авторов
+		for _, books := range library.Books {
+			for _, book := range books {
+				authorsSet[book.Author] = struct{}{} // Добавляем автора в множество
+			}
+		}
+
+		// Преобразуем множество в срез
+		var authors []string
+		for author := range authorsSet {
+			authors = append(authors, author)
+		}
+
+		resp.OutputJSON(w, authors) // Возвращаем список авторов в формате JSON
+	}
+}
+
+// @Summary Add a new book to the library
+// @Description This endpoint allows you to add a new book to the library.
+// @Tags Books
+// @Accept json
+// @Produce json
+// @Param book body repository.Book true "Book details"
+// @Success 201 {object} repository.Book "Book added successfully"
+// @Failure 400 {object} mErrorResponse "Invalid request"
+// @Failure 500 {object} mErrorResponse "Internal server error"
+// @Router /api/book [post]
+func addBookHandler(resp controller.Responder, db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var newBook repository.Book
+		if err := json.NewDecoder(r.Body).Decode(&newBook); err != nil {
+			resp.ErrorBadRequest(w, errors.New("invalid request body"))
+			return
+		}
+
+		// Вставка новой книги в базу данных
+		_, err := db.Exec("INSERT INTO book (book, author, block) VALUES ($1, $2, $3)", newBook.Book, newBook.Author, newBook.Block)
+		if err != nil {
+			resp.ErrorInternal(w, err)
+			return
+		}
+
+		resp.OutputJSON(w, newBook) // Возвращаем добавленную книгу
+	}
+}
+
+// @Summary Get List of Registered Users
+// @Description This endpoint returns a list of all registered users.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Success 200 {array} auth.User "List of registered users"
+// @Failure 500 {object} mErrorResponse "Internal server error"
+// @Router /api/users [get]
+func listUsersHandler(resp controller.Responder) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Здесь предполагается, что Users - это глобальная переменная, содержащая всех пользователей
+		var users []auth.User
+		for _, user := range auth.Users {
+			users = append(users, user)
+		}
+
+		resp.OutputJSON(w, users) // Возвращаем список пользователей
+	}
+}
+
+func router(userController *control.UserController, resp controller.Responder, geoService service.GeoProvider, db *sql.DB, bookController *control.BookController, books *[]repository.Book, library *Library) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(proxyMiddleware)
@@ -435,12 +582,15 @@ func router(userController *control.UserController, resp controller.Responder, g
 	r.Put("/api/users/{id}", userController.UpdateUser)    // Обновление пользователя
 	r.Delete("/api/users/{id}", userController.DeleteUser) // Удаление пользователя
 	r.Get("/api/users", userController.ListUsers)
-	var library auth.Library
 
-	r.Post("/api/book/take/{index}", takeBookHandler(resp, db, books, &library))
-	r.Delete("/api/book/return/{index}", ReturnBook(resp, db, books, &library))
+	r.Post("/api/book/take/{index}", takeBookHandler(resp, db, books, library))
+	r.Delete("/api/book/return/{index}", ReturnBook(resp, db, books, library))
+	r.Get("/api/users", listUsersHandler(resp))
 
+	r.Post("/api/book", addBookHandler(resp, db))
 	r.Get("/api/book", bookController.ListBook)
+	r.Put("/api/book/{index}", updateBook(resp, db))
+	r.Get("/api/authors", listAuthorsHandler(resp, library))
 
 	// Используем обработчики с middleware
 	r.With(TokenAuthMiddleware(resp)).Post("/api/address/geocode", geocodeHandler(resp, geoService))

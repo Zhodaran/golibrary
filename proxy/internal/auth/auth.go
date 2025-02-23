@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-chi/jwtauth"
 	"golang.org/x/crypto/bcrypt"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/repository"
 )
 
 type LoginResponse struct {
@@ -34,11 +33,6 @@ var (
 type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-}
-
-type Library struct {
-	Users map[string]*User
-	Books map[string]map[int]repository.Book
 }
 
 // @Summary Register a new user
@@ -82,7 +76,6 @@ func Register(w http.ResponseWriter, r *http.Request) {
 // @Summary Login a user
 // @Description This endpoint allows a user to log in with their username and password.
 // @Tags auth
-// @Accept json
 // @Produce json
 // @Param user body User true "User login details"
 // @Success 200 {object} LoginResponse "Login successful"

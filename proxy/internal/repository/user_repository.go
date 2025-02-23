@@ -19,8 +19,6 @@ type PostgresBookRepository struct {
 	db *sql.DB
 }
 
-var Books []Book
-
 func NewPostgresBookRepository(db *sql.DB) *PostgresBookRepository {
 	return &PostgresBookRepository{db: db}
 }
@@ -77,6 +75,8 @@ func (r *PostgresUserRepository) List(ctx context.Context, limit, offset int) ([
 	return users, nil
 }
 
+var Books []Book
+
 func (r *PostgresBookRepository) MList(ctx context.Context, limit, offset int) ([]Book, error) {
 	query := "SELECT index, book, author, block, take_count FROM book WHERE block = FALSE LIMIT $1 OFFSET $2"
 	rows, err := r.db.QueryContext(ctx, query, limit, offset)
@@ -85,13 +85,12 @@ func (r *PostgresBookRepository) MList(ctx context.Context, limit, offset int) (
 	}
 	defer rows.Close()
 
-	var books []Book
 	for rows.Next() {
 		var book Book
 		if err := rows.Scan(&book.Index, &book.Book, &book.Author, &book.Block, &book.TakeCount); err != nil {
 			return nil, err
 		}
-		books = append(books, book)
+		Books = append(Books, book)
 	}
-	return books, nil
+	return Books, nil
 }

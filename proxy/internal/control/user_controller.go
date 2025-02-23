@@ -98,7 +98,7 @@ func (uc *UserController) ListUsers(w http.ResponseWriter, r *http.Request) {
 
 // @Summary List SQL book
 // @Description This description created new SQL user
-// @Tags TakeBook
+// @Tags Books
 // @Accept json
 // @Produce json
 // @Success 200 {object} CreateResponse "List successful"

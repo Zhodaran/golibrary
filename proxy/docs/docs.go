@@ -15,6 +15,38 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/authors": {
+            "get": {
+                "description": "This endpoint returns a list of all authors from the library.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Get List of Authors",
+                "responses": {
+                    "200": {
+                        "description": "List of authors",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/main.mErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/book": {
             "get": {
                 "description": "This description created new SQL user",
@@ -25,7 +57,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "TakeBook"
+                    "Books"
                 ],
                 "summary": "List SQL book",
                 "responses": {
@@ -51,6 +83,50 @@ const docTemplate = `{
                         "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/control.rErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "This endpoint allows you to add a new book to the library.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Add a new book to the library",
+                "parameters": [
+                    {
+                        "description": "Book details",
+                        "name": "book",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/repository.Book"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Book added successfully",
+                        "schema": {
+                            "$ref": "#/definitions/repository.Book"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/main.mErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/main.mErrorResponse"
                         }
                     }
                 }
@@ -186,12 +262,75 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/login": {
-            "post": {
-                "description": "This endpoint allows a user to log in with their username and password.",
+        "/api/book/{index}": {
+            "put": {
+                "description": "Этот эндпоинт позволяет обновить информацию о книге по индексу.",
                 "consumes": [
                     "application/json"
                 ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Обновление информации о книге",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Индекс книги",
+                        "name": "index",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Обновленная информация о книге",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/repository.Book"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное обновление книги",
+                        "schema": {
+                            "$ref": "#/definitions/repository.Book"
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка запроса",
+                        "schema": {
+                            "$ref": "#/definitions/main.mErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Книга не найдена",
+                        "schema": {
+                            "$ref": "#/definitions/main.mErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/main.mErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/login": {
+            "post": {
+                "description": "This endpoint allows a user to log in with their username and password.",
                 "produces": [
                     "application/json"
                 ],
@@ -289,6 +428,38 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/users": {
+            "get": {
+                "description": "This endpoint returns a list of all registered users.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get List of Registered Users",
+                "responses": {
+                    "200": {
+                        "description": "List of registered users",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/auth.User"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/main.mErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -375,6 +546,26 @@ const docTemplate = `{
                 },
                 "500": {
                     "type": "string"
+                }
+            }
+        },
+        "repository.Book": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "block": {
+                    "type": "boolean"
+                },
+                "book": {
+                    "type": "string"
+                },
+                "index": {
+                    "type": "integer"
+                },
+                "take_count": {
+                    "type": "integer"
                 }
             }
         },
