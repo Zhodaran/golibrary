@@ -65,7 +65,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/main.AuthorRequest"
                         }
                     }
                 ],
@@ -566,6 +566,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "500": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.AuthorRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
                     "type": "string"
                 }
             }

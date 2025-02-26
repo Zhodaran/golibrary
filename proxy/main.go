@@ -571,25 +571,29 @@ func listUsersHandler(resp controller.Responder) http.HandlerFunc {
 	}
 }
 
+type AuthorRequest struct {
+	Name string `json:"name"`
+}
+
 // @Summary Add a new author to the library
 // @Description This endpoint allows you to add a new author to the library.
 // @Tags Authors
 // @Accept json
 // @Produce json
-// @Param author body string true "Author name"
+// @Param author body AuthorRequest true "Author name"
 // @Success 201 {object} string "Author added successfully"
 // @Failure 400 {object} mErrorResponse "Invalid request"
 // @Failure 500 {object} mErrorResponse "Internal server error"
 // @Router /api/authors [post]
 func addAuthorHandler(resp controller.Responder, library *Library) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var authorName string
-		if err := json.NewDecoder(r.Body).Decode(&authorName); err != nil {
+		var authorRequest AuthorRequest
+		if err := json.NewDecoder(r.Body).Decode(&authorRequest); err != nil {
 			resp.ErrorBadRequest(w, errors.New("invalid request body"))
 			return
 		}
 
-		if authorName == "" {
+		if authorRequest.Name == "" {
 			resp.ErrorBadRequest(w, errors.New("author name is required"))
 			return
 		}
@@ -599,7 +603,7 @@ func addAuthorHandler(resp controller.Responder, library *Library) http.HandlerF
 
 		// Добавление автора в библиотеку (можно добавить логику для проверки уникальности)
 		// Здесь предполагается, что у вас есть структура для хранения авторов
-		library.Authors = append(library.Authors, authorName)
+		library.Authors = append(library.Authors, authorRequest.Name)
 
 		resp.OutputJSON(w, map[string]string{"message": "Author added successfully"})
 	}

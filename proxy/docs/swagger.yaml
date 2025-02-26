@@ -39,6 +39,11 @@ definitions:
       "500":
         type: string
     type: object
+  main.AuthorRequest:
+    properties:
+      name:
+        type: string
+    type: object
   main.TakeBookRequest:
     properties:
       username:
@@ -128,7 +133,7 @@ paths:
         name: author
         required: true
         schema:
-          type: string
+          $ref: '#/definitions/main.AuthorRequest'
       produces:
       - application/json
       responses:
