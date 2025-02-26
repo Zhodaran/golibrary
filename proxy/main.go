@@ -71,8 +71,9 @@ type Server struct {
 }
 
 type Library struct {
-	Books map[string][]repository.Book
-	mu    sync.RWMutex
+	Books   map[string][]repository.Book
+	Authors []string
+	mu      sync.RWMutex
 }
 
 func NewLibrary() *Library {
@@ -491,7 +492,7 @@ func updateBook(resp controller.Responder, db *sql.DB) http.HandlerFunc {
 
 // @Summary Get List of Authors
 // @Description This endpoint returns a list of all authors from the library.
-// @Tags Books
+// @Tags Authors
 // @Accept json
 // @Produce json
 // @Success 200 {array} string "List of authors"
@@ -570,6 +571,40 @@ func listUsersHandler(resp controller.Responder) http.HandlerFunc {
 	}
 }
 
+// @Summary Add a new author to the library
+// @Description This endpoint allows you to add a new author to the library.
+// @Tags Authors
+// @Accept json
+// @Produce json
+// @Param author body string true "Author name"
+// @Success 201 {object} string "Author added successfully"
+// @Failure 400 {object} mErrorResponse "Invalid request"
+// @Failure 500 {object} mErrorResponse "Internal server error"
+// @Router /api/authors [post]
+func addAuthorHandler(resp controller.Responder, library *Library) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var authorName string
+		if err := json.NewDecoder(r.Body).Decode(&authorName); err != nil {
+			resp.ErrorBadRequest(w, errors.New("invalid request body"))
+			return
+		}
+
+		if authorName == "" {
+			resp.ErrorBadRequest(w, errors.New("author name is required"))
+			return
+		}
+
+		library.mu.Lock()         // Блокируем запись
+		defer library.mu.Unlock() // Разблокируем запись после завершения
+
+		// Добавление автора в библиотеку (можно добавить логику для проверки уникальности)
+		// Здесь предполагается, что у вас есть структура для хранения авторов
+		library.Authors = append(library.Authors, authorName)
+
+		resp.OutputJSON(w, map[string]string{"message": "Author added successfully"})
+	}
+}
+
 func router(userController *control.UserController, resp controller.Responder, geoService service.GeoProvider, db *sql.DB, bookController *control.BookController, books *[]repository.Book, library *Library) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -586,6 +621,8 @@ func router(userController *control.UserController, resp controller.Responder, g
 	r.Post("/api/book/take/{index}", takeBookHandler(resp, db, books, library))
 	r.Delete("/api/book/return/{index}", ReturnBook(resp, db, books, library))
 	r.Get("/api/users", listUsersHandler(resp))
+
+	r.Post("/api/authors", addAuthorHandler(resp, library))
 
 	r.Post("/api/book", addBookHandler(resp, db))
 	r.Get("/api/book", bookController.ListBook)

@@ -117,7 +117,36 @@ paths:
             $ref: '#/definitions/main.mErrorResponse'
       summary: Get List of Authors
       tags:
-      - Books
+      - Authors
+    post:
+      consumes:
+      - application/json
+      description: This endpoint allows you to add a new author to the library.
+      parameters:
+      - description: Author name
+        in: body
+        name: author
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Author added successfully
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/main.mErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/main.mErrorResponse'
+      summary: Add a new author to the library
+      tags:
+      - Authors
   /api/book:
     get:
       consumes:
