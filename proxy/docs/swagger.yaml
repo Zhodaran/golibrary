@@ -336,6 +336,25 @@ paths:
       summary: Get Geo Coordinates by Address
       tags:
       - User
+  /api/get-authors:
+    get:
+      description: Get a list of all authors in the library
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of authors
+          schema:
+            items:
+              type: string
+            type: array
+        "404":
+          description: No authors found
+          schema:
+            $ref: '#/definitions/main.mErrorResponse'
+      summary: Get all authors
+      tags:
+      - Authors
   /api/login:
     post:
       description: This endpoint allows a user to log in with their username and password.

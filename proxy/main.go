@@ -124,6 +124,8 @@ func main() {
 	books := createTableBook(db)
 	library := NewLibrary()
 
+	library.AddBooks(books)
+
 	userRepo := repository.NewPostgresUserRepository(db)
 	BookRepo := repository.NewPostgresBookRepository(db)
 	userController := control.NewUserController(userRepo)
@@ -158,6 +160,30 @@ func main() {
 	} else {
 		log.Println("Server stopped gracefully")
 	}
+}
+
+func (l *Library) AddBooks(books []repository.Book) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	for _, book := range books {
+		// Добавляем книгу в мапу по автору
+		l.Books[book.Author] = append(l.Books[book.Author], book)
+
+		// Добавляем автора в список, если его там еще нет
+		if !contains(l.Authors, book.Author) {
+			l.Authors = append(l.Authors, book.Author)
+		}
+	}
+}
+
+func contains(authors []string, author string) bool {
+	for _, a := range authors {
+		if a == author {
+			return true
+		}
+	}
+	return false
 }
 
 func runMigrations(db *sql.DB) {
@@ -609,6 +635,30 @@ func addAuthorHandler(resp controller.Responder, library *Library) http.HandlerF
 	}
 }
 
+// getAuthorsHandler godoc
+// @Summary Get all authors
+// @Description Get a list of all authors in the library
+// @Tags Authors
+// @Produce json
+// @Success 200 {array} string "List of authors"
+// @Failure 404 {object} mErrorResponse "No authors found"
+// @Router /api/get-authors [get]
+func getAuthorsHandler(resp controller.Responder, library *Library) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		library.mu.RLock()         // Блокируем чтение
+		defer library.mu.RUnlock() // Разблокируем чтение после завершения
+
+		// Проверяем, есть ли авторы
+		if len(library.Authors) == 0 {
+			http.Error(w, "No authors found", http.StatusNotFound)
+			return
+		}
+
+		// Возвращаем список авторов в формате JSON
+		resp.OutputJSON(w, library.Authors)
+	}
+}
+
 func router(userController *control.UserController, resp controller.Responder, geoService service.GeoProvider, db *sql.DB, bookController *control.BookController, books *[]repository.Book, library *Library) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -629,9 +679,10 @@ func router(userController *control.UserController, resp controller.Responder, g
 	r.Post("/api/authors", addAuthorHandler(resp, library))
 
 	r.Post("/api/book", addBookHandler(resp, db))
-	r.Get("/api/book", bookController.ListBook)
+	r.Get("/api/books", bookController.ListBook)
 	r.Put("/api/book/{index}", updateBook(resp, db))
-	r.Get("/api/authors", listAuthorsHandler(resp, library))
+	r.Get("/api/author", listAuthorsHandler(resp, library))
+	r.Get("/api/get-authors", getAuthorsHandler(resp, library))
 
 	// Используем обработчики с middleware
 	r.With(TokenAuthMiddleware(resp)).Post("/api/address/geocode", geocodeHandler(resp, geoService))

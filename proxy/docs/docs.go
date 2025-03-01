@@ -372,6 +372,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/get-authors": {
+            "get": {
+                "description": "Get a list of all authors in the library",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authors"
+                ],
+                "summary": "Get all authors",
+                "responses": {
+                    "200": {
+                        "description": "List of authors",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No authors found",
+                        "schema": {
+                            "$ref": "#/definitions/main.mErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/login": {
             "post": {
                 "description": "This endpoint allows a user to log in with their username and password.",
