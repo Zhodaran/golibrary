@@ -153,32 +153,6 @@ paths:
       tags:
       - Authors
   /api/book:
-    get:
-      consumes:
-      - application/json
-      description: This description created new SQL user
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: List successful
-          schema:
-            $ref: '#/definitions/control.CreateResponse'
-        "400":
-          description: Invalid request
-          schema:
-            $ref: '#/definitions/control.rErrorResponse'
-        "401":
-          description: Invalid credentials
-          schema:
-            $ref: '#/definitions/control.rErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/control.rErrorResponse'
-      summary: List SQL book
-      tags:
-      - Books
     post:
       consumes:
       - application/json
@@ -336,6 +310,33 @@ paths:
       summary: Get Geo Coordinates by Address
       tags:
       - User
+  /api/books:
+    get:
+      consumes:
+      - application/json
+      description: This description created new SQL user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List successful
+          schema:
+            $ref: '#/definitions/control.CreateResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/control.rErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/control.rErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/control.rErrorResponse'
+      summary: List SQL book
+      tags:
+      - Books
   /api/get-authors:
     get:
       description: Get a list of all authors in the library

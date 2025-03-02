@@ -105,7 +105,7 @@ func (uc *UserController) ListUsers(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} rErrorResponse "Invalid request"
 // @Failure 401 {object} rErrorResponse "Invalid credentials"
 // @Failure 500 {object} rErrorResponse "Internal server error"
-// @Router /api/book [get]
+// @Router /api/books [get]
 func (uc *BookController) ListBook(w http.ResponseWriter, r *http.Request) {
 	limit := 100 // Установите значение по умолчанию
 	offset := 0  // Установите значение по умолчанию

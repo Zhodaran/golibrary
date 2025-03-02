@@ -92,45 +92,6 @@ const docTemplate = `{
             }
         },
         "/api/book": {
-            "get": {
-                "description": "This description created new SQL user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Books"
-                ],
-                "summary": "List SQL book",
-                "responses": {
-                    "200": {
-                        "description": "List successful",
-                        "schema": {
-                            "$ref": "#/definitions/control.CreateResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/control.rErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid credentials",
-                        "schema": {
-                            "$ref": "#/definitions/control.rErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/control.rErrorResponse"
-                        }
-                    }
-                }
-            },
             "post": {
                 "description": "This endpoint allows you to add a new book to the library.",
                 "consumes": [
@@ -367,6 +328,47 @@ const docTemplate = `{
                         "description": "Ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/main.mErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/books": {
+            "get": {
+                "description": "This description created new SQL user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Books"
+                ],
+                "summary": "List SQL book",
+                "responses": {
+                    "200": {
+                        "description": "List successful",
+                        "schema": {
+                            "$ref": "#/definitions/control.CreateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/control.rErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/control.rErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/control.rErrorResponse"
                         }
                     }
                 }
