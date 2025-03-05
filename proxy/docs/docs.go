@@ -16,36 +16,6 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/api/authors": {
-            "get": {
-                "description": "This endpoint returns a list of all authors from the library.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Authors"
-                ],
-                "summary": "Get List of Authors",
-                "responses": {
-                    "200": {
-                        "description": "List of authors",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
-                        }
-                    }
-                }
-            },
             "post": {
                 "description": "This endpoint allows you to add a new author to the library.",
                 "consumes": [

@@ -103,26 +103,6 @@ info:
   version: "1.0"
 paths:
   /api/authors:
-    get:
-      consumes:
-      - application/json
-      description: This endpoint returns a list of all authors from the library.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: List of authors
-          schema:
-            items:
-              type: string
-            type: array
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/main.mErrorResponse'
-      summary: Get List of Authors
-      tags:
-      - Authors
     post:
       consumes:
       - application/json

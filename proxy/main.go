@@ -516,14 +516,6 @@ func updateBook(resp controller.Responder, db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// @Summary Get List of Authors
-// @Description This endpoint returns a list of all authors from the library.
-// @Tags Authors
-// @Accept json
-// @Produce json
-// @Success 200 {array} string "List of authors"
-// @Failure 500 {object} mErrorResponse "Internal server error"
-// @Router /api/authors [get]
 func listAuthorsHandler(resp controller.Responder, library *Library) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		library.mu.RLock()         // Блокируем чтение
