@@ -653,6 +653,7 @@ func getAuthorsHandler(resp controller.Responder, library *Library) http.Handler
 
 func router(userController *control.UserController, resp controller.Responder, geoService service.GeoProvider, db *sql.DB, bookController *control.BookController, books *[]repository.Book, library *Library) http.Handler {
 	r := chi.NewRouter()
+	auth.GenerateUsers(50)
 	r.Use(middleware.Logger)
 	r.Use(proxyMiddleware)
 	r.Get("/swagger/*", httpSwagger.WrapHandler)

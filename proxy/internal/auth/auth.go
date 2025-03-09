@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/brianvoe/gofakeit"
 	"github.com/go-chi/jwtauth"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -114,4 +115,23 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(TokenResponse{Token: tokenString})
 	fmt.Println(tokenString)
+}
+
+func GenerateUsers(count int) {
+	for i := 0; i < count; i++ {
+		username := gofakeit.Username()                                   // Генерация случайного имени пользователя
+		password := gofakeit.Password(true, true, true, false, false, 10) // Генерация случайного пароля
+
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			fmt.Println("Could not hash password:", err)
+			continue
+		}
+
+		Users[username] = User{
+			Username: username,
+			Password: string(hashedPassword),
+		}
+		fmt.Printf("Created user: %s with password: %s\n", username, password)
+	}
 }
