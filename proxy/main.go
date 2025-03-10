@@ -569,28 +569,6 @@ func addBookHandler(resp controller.Responder, db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// @Summary Get List of Registered Users
-// @Description This endpoint returns a list of all registered users.
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Success 200 {array} auth.User "List of registered users"
-// @Failure 500 {object} mErrorResponse "Internal server error"
-// @Router /api/users [get]
-func listUsersHandler(resp controller.Responder) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		  auth.mu.Lock() 
-        defer auth.mu.Unlock() 
-		// Здесь предполагается, что Users - это глобальная переменная, содержащая всех пользователей
-		var users []auth.User
-		for _, user := range auth.Users {
-			users = append(users, user)
-		}
-
-		resp.OutputJSON(w, users) // Возвращаем список пользователей
-	}
-}
-
 type AuthorRequest struct {
 	Name string `json:"name"`
 }
@@ -669,7 +647,7 @@ func router(userController *control.UserController, resp controller.Responder, g
 
 	r.Post("/api/book/take/{index}", takeBookHandler(resp, db, books, library))
 	r.Delete("/api/book/return/{index}", ReturnBook(resp, db, books, library))
-	r.Get("/api/users", listUsersHandler(resp))
+	r.Get("/api/users", auth.ListUsersHandler(resp))
 
 	r.Post("/api/authors", addAuthorHandler(resp, library))
 

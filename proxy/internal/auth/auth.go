@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/brianvoe/gofakeit"
 	"github.com/go-chi/jwtauth"
 	"golang.org/x/crypto/bcrypt"
+	"studentgit.kata.academy/Zhodaran/go-kata/controller"
 )
 
 type LoginResponse struct {
@@ -28,7 +30,7 @@ type ErrorResponse struct {
 var (
 	TokenAuth = jwtauth.New("HS256", []byte("your_secret_key"), nil)
 	Users     = make(map[string]User) // Хранение пользователей
-        mu    sync.Mutex 
+	mu        sync.Mutex
 )
 
 type User struct {
@@ -54,8 +56,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	 mu.Lock() 
-    defer mu.Unlock()
+	mu.Lock()
+	defer mu.Unlock()
 
 	if _, exists := Users[user.Username]; exists {
 		http.Error(w, "User already exists", http.StatusConflict)
@@ -136,5 +138,27 @@ func GenerateUsers(count int) {
 			Password: string(hashedPassword),
 		}
 		fmt.Printf("Created user: %s with password: %s\n", username, password)
+	}
+}
+
+// @Summary Get List of Registered Users
+// @Description This endpoint returns a list of all registered users.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Success 200 {array} User "List of registered users"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /api/users [get]
+func ListUsersHandler(resp controller.Responder) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+		// Здесь предполагается, что Users - это глобальная переменная, содержащая всех пользователей
+		var users []User
+		for _, user := range Users {
+			users = append(users, user)
+		}
+
+		resp.OutputJSON(w, users) // Возвращаем список пользователей
 	}
 }
