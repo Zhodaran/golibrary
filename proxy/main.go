@@ -579,6 +579,8 @@ func addBookHandler(resp controller.Responder, db *sql.DB) http.HandlerFunc {
 // @Router /api/users [get]
 func listUsersHandler(resp controller.Responder) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		  mu.Lock() 
+        defer mu.Unlock() 
 		// Здесь предполагается, что Users - это глобальная переменная, содержащая всех пользователей
 		var users []auth.User
 		for _, user := range auth.Users {
