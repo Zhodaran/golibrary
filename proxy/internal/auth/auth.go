@@ -28,7 +28,7 @@ type ErrorResponse struct {
 var (
 	TokenAuth = jwtauth.New("HS256", []byte("your_secret_key"), nil)
 	Users     = make(map[string]User) // Хранение пользователей
-
+        mu    sync.Mutex 
 )
 
 type User struct {
