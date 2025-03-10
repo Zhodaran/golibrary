@@ -54,6 +54,9 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	 mu.Lock() 
+    defer mu.Unlock()
+
 	if _, exists := Users[user.Username]; exists {
 		http.Error(w, "User already exists", http.StatusConflict)
 		return
