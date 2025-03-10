@@ -64,15 +64,9 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		http.Error(w, "Could not hash password", http.StatusInternalServerError)
-		return
-	}
-
 	Users[user.Username] = User{
 		Username: user.Username,
-		Password: string(hashedPassword),
+		Password: user.Password,
 	}
 
 	// Используем логин пользователя в качестве user_id
@@ -127,15 +121,9 @@ func GenerateUsers(count int) {
 		username := gofakeit.Username()                                   // Генерация случайного имени пользователя
 		password := gofakeit.Password(true, true, true, false, false, 10) // Генерация случайного пароля
 
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-		if err != nil {
-			fmt.Println("Could not hash password:", err)
-			continue
-		}
-
 		Users[username] = User{
 			Username: username,
-			Password: string(hashedPassword),
+			Password: password,
 		}
 		fmt.Printf("Created user: %s with password: %s\n", username, password)
 	}
