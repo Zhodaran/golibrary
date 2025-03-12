@@ -9,7 +9,6 @@ import (
 
 	"github.com/brianvoe/gofakeit"
 	"github.com/go-chi/jwtauth"
-	"golang.org/x/crypto/bcrypt"
 	"studentgit.kata.academy/Zhodaran/go-kata/controller"
 )
 
