@@ -90,16 +90,20 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Получаем хешированный пароль пользователя из мапы users
+	// Получаем данные пользователя из мапы Users
 	storedUser, exists := Users[user.Username]
-	if !exists || bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(user.Password)) != nil {
+	if !exists {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
-	// Если авторизация успешна, возвращаем статус 200 OK
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(LoginResponse{Message: "Login successful"})
+	// Проверяем совпадение пароля
+	if storedUser.Password != user.Password {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	// Если авторизация успешна, создаем токен
 	claims := map[string]interface{}{
 		"user_id": user.Username, // Используем username как user_id
 		"exp":     time.Now().Add(time.Hour * 72).Unix(),
@@ -111,7 +115,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Authorization", "Bearer "+tokenString)
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(TokenResponse{Token: tokenString})
 	fmt.Println(tokenString)
 }
