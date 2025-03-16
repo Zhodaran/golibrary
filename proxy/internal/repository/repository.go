@@ -19,10 +19,6 @@ type Book struct {
 	TakeCount int    `json:"take_count"`
 }
 
-type BookRepository interface {
-	MList(ctx context.Context, limit, offset int) ([]Book, error)
-}
-
 // UserRepository определяет методы для работы с пользователями
 type UserRepository interface {
 	Create(ctx context.Context, user User) error

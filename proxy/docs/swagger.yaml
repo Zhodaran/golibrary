@@ -27,6 +27,11 @@ definitions:
     type: object
   control.CreateResponse:
     properties:
+      books:
+        description: Добавляем поле для списка книг
+        items:
+          $ref: '#/definitions/repository.Book'
+        type: array
       message:
         type: string
     type: object

@@ -127,16 +127,15 @@ func main() {
 	library.AddBooks(books)
 
 	userRepo := repository.NewPostgresUserRepository(db)
-	BookRepo := repository.NewPostgresBookRepository(db)
+	bookController := &control.BookController{DB: db}
 	userController := control.NewUserController(userRepo)
-	bookController := control.NewBookController(BookRepo)
 
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 
 	geoService := service.NewGeoService("d9e0649452a137b73d941aa4fb4fcac859372c8c", "ec99b849ebf21277ec821c63e1a2bc8221900b1d") // Создаем новый экземпляр GeoService
 	resp := controller.NewResponder(logger)
-	r := router(userController, resp, geoService, db, bookController, &books, library)
+	r := router(bookController, userController, resp, geoService, db, &books, library)
 
 	srv := &Server{
 		Server: http.Server{
@@ -174,6 +173,41 @@ func (l *Library) AddBooks(books []repository.Book) {
 		if !contains(l.Authors, book.Author) {
 			l.Authors = append(l.Authors, book.Author)
 		}
+	}
+}
+
+func (l *Library) AddBook(book repository.Book) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	// Получаем список книг автора
+	booksByAuthor := l.Books[book.Author]
+
+	// Находим первый свободный индекс
+	newIndex := 1
+	for {
+		found := false
+		for _, b := range booksByAuthor {
+			if b.Index == newIndex {
+				found = true
+				break
+			}
+		}
+		if !found {
+			break
+		}
+		newIndex++
+	}
+
+	// Присваиваем книге новый индекс
+	book.Index = newIndex
+
+	// Добавляем книгу в список
+	l.Books[book.Author] = append(booksByAuthor, book)
+
+	// Добавляем автора в список, если его там еще нет
+	if !contains(l.Authors, book.Author) {
+		l.Authors = append(l.Authors, book.Author)
 	}
 }
 
@@ -550,7 +584,7 @@ func listAuthorsHandler(resp controller.Responder, library *Library) http.Handle
 // @Failure 400 {object} mErrorResponse "Invalid request"
 // @Failure 500 {object} mErrorResponse "Internal server error"
 // @Router /api/book [post]
-func addBookHandler(resp controller.Responder, db *sql.DB) http.HandlerFunc {
+func addBookHandler(resp controller.Responder, db *sql.DB, library *Library) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var newBook repository.Book
 		if err := json.NewDecoder(r.Body).Decode(&newBook); err != nil {
@@ -558,12 +592,25 @@ func addBookHandler(resp controller.Responder, db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// Вставка новой книги в базу данных
-		_, err := db.Exec("INSERT INTO book (book, author, block) VALUES ($1, $2, $3)", newBook.Book, newBook.Author, newBook.Block)
+		// Проверка на существование книги
+		var exists bool
+		err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM book WHERE book = $1 AND author = $2)", newBook.Book, newBook.Author).Scan(&exists)
 		if err != nil {
 			resp.ErrorInternal(w, err)
 			return
 		}
+		if exists {
+			resp.ErrorBadRequest(w, errors.New("book already exists"))
+			return
+		}
+
+		// Вставка новой книги в базу данных
+		_, err = db.Exec("INSERT INTO book (book, author, block) VALUES ($1, $2, $3)", newBook.Book, newBook.Author, newBook.Block)
+		if err != nil {
+			resp.ErrorInternal(w, err)
+			return
+		}
+		library.AddBook(newBook)
 
 		resp.OutputJSON(w, newBook) // Возвращаем добавленную книгу
 	}
@@ -631,7 +678,7 @@ func getAuthorsHandler(resp controller.Responder, library *Library) http.Handler
 	}
 }
 
-func router(userController *control.UserController, resp controller.Responder, geoService service.GeoProvider, db *sql.DB, bookController *control.BookController, books *[]repository.Book, library *Library) http.Handler {
+func router(bookController *control.BookController, userController *control.UserController, resp controller.Responder, geoService service.GeoProvider, db *sql.DB, books *[]repository.Book, library *Library) http.Handler {
 	r := chi.NewRouter()
 	auth.GenerateUsers(50)
 	r.Use(middleware.Logger)
@@ -651,7 +698,7 @@ func router(userController *control.UserController, resp controller.Responder, g
 
 	r.Post("/api/authors", addAuthorHandler(resp, library))
 
-	r.Post("/api/book", addBookHandler(resp, db))
+	r.Post("/api/book", addBookHandler(resp, db, library))
 	r.Get("/api/books", bookController.ListBook)
 	r.Put("/api/book/{index}", updateBook(resp, db))
 	r.Get("/api/author", listAuthorsHandler(resp, library))

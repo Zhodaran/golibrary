@@ -2,6 +2,7 @@ package control
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 
@@ -14,19 +15,16 @@ type UserController struct {
 }
 
 type BookController struct {
-	BookRepo repository.BookRepository
+	DB *sql.DB
 }
 
 func NewUserController(userRepo repository.UserRepository) *UserController {
 	return &UserController{userRepo: userRepo}
 }
 
-func NewBookController(BookRepo repository.BookRepository) *BookController {
-	return &BookController{BookRepo: BookRepo}
-}
-
 type CreateResponse struct {
-	Message string `json:"message"`
+	Message string            `json:"message"`
+	Books   []repository.Book `json:"books"` // Добавляем поле для списка книг
 }
 
 type rErrorResponse struct {
@@ -107,13 +105,44 @@ func (uc *UserController) ListUsers(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} rErrorResponse "Internal server error"
 // @Router /api/books [get]
 func (uc *BookController) ListBook(w http.ResponseWriter, r *http.Request) {
-	limit := 300 // Установите значение по умолчанию
-	offset := 0  // Установите значение по умолчанию
-	books, err := uc.BookRepo.MList(context.Background(), limit, offset)
+	// Получаем список книг из базы данных
+	books, err := uc.getBooksFromDB()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(CreateResponse{Message: "List successful"})
-	json.NewEncoder(w).Encode(books)
+
+	// Устанавливаем заголовок Content-Type
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK) // Устанавливаем статус 200 OK
+
+	// Кодируем и отправляем список книг
+	if err := json.NewEncoder(w).Encode(books); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (uc *BookController) getBooksFromDB() ([]repository.Book, error) {
+	query := "SELECT index, book, author, block, take_count FROM book"
+	rows, err := uc.DB.QueryContext(context.Background(), query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var books []repository.Book
+	for rows.Next() {
+		var book repository.Book
+		if err := rows.Scan(&book.Index, &book.Book, &book.Author, &book.Block, &book.TakeCount); err != nil {
+			return nil, err
+		}
+		books = append(books, book)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return books, nil
 }

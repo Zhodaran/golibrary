@@ -552,6 +552,13 @@ const docTemplate = `{
         "control.CreateResponse": {
             "type": "object",
             "properties": {
+                "books": {
+                    "description": "Добавляем поле для списка книг",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/repository.Book"
+                    }
+                },
                 "message": {
                     "type": "string"
                 }
