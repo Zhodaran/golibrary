@@ -107,7 +107,7 @@ func (uc *UserController) ListUsers(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} rErrorResponse "Internal server error"
 // @Router /api/books [get]
 func (uc *BookController) ListBook(w http.ResponseWriter, r *http.Request) {
-	limit := 100 // Установите значение по умолчанию
+	limit := 300 // Установите значение по умолчанию
 	offset := 0  // Установите значение по умолчанию
 	books, err := uc.BookRepo.MList(context.Background(), limit, offset)
 	if err != nil {
