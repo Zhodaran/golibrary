@@ -255,7 +255,7 @@ func createTableBook(db *sql.DB) []repository.Book {
 		log.Fatalf("Error running migrations: %v", err)
 	}
 	var books []repository.Book
-	for i := 0; i < 100; i++ {
+	for i := 1; i < 101; i++ {
 		book := repository.Book{
 			Index:     i,
 			Book:      gofakeit.Sentence(1),                        // Генерация названия книги
