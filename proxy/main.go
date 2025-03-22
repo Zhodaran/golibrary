@@ -256,11 +256,12 @@ func createTableBook(db *sql.DB) []repository.Book {
 	}
 	var books []repository.Book
 	for i := 1; i < 101; i++ {
+		block := false
 		book := repository.Book{
 			Index:     i,
 			Book:      gofakeit.Sentence(1),                        // Генерация названия книги
 			Author:    authors[gofakeit.Number(0, len(authors)-1)], // Случайный автор
-			Block:     false,                                       // Устанавливаем значение блокировки
+			Block:     &block,                                      // Устанавливаем значение блокировки
 			TakeCount: 0,                                           // Начальное значение take_count
 		}
 		books = append(books, book) // Добавляем книгу в массив
@@ -579,12 +580,12 @@ func listAuthorsHandler(resp controller.Responder, library *Library) http.Handle
 // @Tags Books
 // @Accept json
 // @Produce json
-// @Param book body repository.Book true "Book details"
+// @Param book body repository.Book false "Book details"
 // @Success 201 {object} repository.Book "Book added successfully"
 // @Failure 400 {object} mErrorResponse "Invalid request"
 // @Failure 500 {object} mErrorResponse "Internal server error"
 // @Router /api/book [post]
-func addBookHandler(resp controller.Responder, db *sql.DB, library *Library) http.HandlerFunc {
+func addBookHandler(resp controller.Responder, db *sql.DB, library *Library, Books *[]repository.Book) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var newBook repository.Book
 		if err := json.NewDecoder(r.Body).Decode(&newBook); err != nil {
@@ -604,6 +605,9 @@ func addBookHandler(resp controller.Responder, db *sql.DB, library *Library) htt
 			return
 		}
 
+		bloc := false
+		newBook.Block = &bloc
+
 		// Вставка новой книги в базу данных
 		_, err = db.Exec("INSERT INTO book (book, author, block) VALUES ($1, $2, $3)", newBook.Book, newBook.Author, newBook.Block)
 		if err != nil {
@@ -611,7 +615,7 @@ func addBookHandler(resp controller.Responder, db *sql.DB, library *Library) htt
 			return
 		}
 		library.AddBook(newBook)
-
+		*Books = append(*Books, newBook)
 		resp.OutputJSON(w, newBook) // Возвращаем добавленную книгу
 	}
 }
@@ -698,7 +702,7 @@ func router(bookController *control.BookController, userController *control.User
 
 	r.Post("/api/authors", addAuthorHandler(resp, library))
 
-	r.Post("/api/book", addBookHandler(resp, db, library))
+	r.Post("/api/book", addBookHandler(resp, db, library, books))
 	r.Get("/api/books", bookController.ListBook)
 	r.Put("/api/book/{index}", updateBook(resp, db))
 	r.Get("/api/author", listAuthorsHandler(resp, library))

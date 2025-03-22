@@ -146,7 +146,6 @@ paths:
       - description: Book details
         in: body
         name: book
-        required: true
         schema:
           $ref: '#/definitions/repository.Book'
       produces:

@@ -79,7 +79,6 @@ const docTemplate = `{
                         "description": "Book details",
                         "name": "book",
                         "in": "body",
-                        "required": true,
                         "schema": {
                             "$ref": "#/definitions/repository.Book"
                         }

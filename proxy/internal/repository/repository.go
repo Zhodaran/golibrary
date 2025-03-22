@@ -15,7 +15,7 @@ type Book struct {
 	Index     int    `json:"index"`
 	Book      string `json:"book"`
 	Author    string `json:"author"`
-	Block     bool   `json:"block"`
+	Block     *bool  `json:"block"`
 	TakeCount int    `json:"take_count"`
 }
 
