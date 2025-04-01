@@ -44,18 +44,18 @@ definitions:
       "500":
         type: string
     type: object
-  main.AuthorRequest:
+  controller.AuthorRequest:
     properties:
       name:
         type: string
     type: object
-  main.TakeBookRequest:
+  controller.TakeBookRequest:
     properties:
       username:
         description: Поле для имени пользователя
         type: string
     type: object
-  main.mErrorResponse:
+  controller.mErrorResponse:
     properties:
       "200":
         type: string
@@ -118,7 +118,7 @@ paths:
         name: author
         required: true
         schema:
-          $ref: '#/definitions/main.AuthorRequest'
+          $ref: '#/definitions/controller.AuthorRequest'
       produces:
       - application/json
       responses:
@@ -129,11 +129,11 @@ paths:
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/main.mErrorResponse'
+            $ref: '#/definitions/controller.mErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/main.mErrorResponse'
+            $ref: '#/definitions/controller.mErrorResponse'
       summary: Add a new author to the library
       tags:
       - Authors
@@ -158,11 +158,11 @@ paths:
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/main.mErrorResponse'
+            $ref: '#/definitions/controller.mErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/main.mErrorResponse'
+            $ref: '#/definitions/controller.mErrorResponse'
       summary: Add a new book to the library
       tags:
       - Books
@@ -198,15 +198,15 @@ paths:
         "400":
           description: Ошибка запроса
           schema:
-            $ref: '#/definitions/main.mErrorResponse'
+            $ref: '#/definitions/controller.mErrorResponse'
         "404":
           description: Книга не найдена
           schema:
-            $ref: '#/definitions/main.mErrorResponse'
+            $ref: '#/definitions/controller.mErrorResponse'
         "500":
           description: Ошибка сервера
           schema:
-            $ref: '#/definitions/main.mErrorResponse'
+            $ref: '#/definitions/controller.mErrorResponse'
       summary: Обновление информации о книге
       tags:
       - Books
@@ -231,7 +231,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/main.TakeBookRequest'
+          $ref: '#/definitions/controller.TakeBookRequest'
       produces:
       - application/json
       responses:
@@ -242,11 +242,11 @@ paths:
         "400":
           description: Ошибка запроса
           schema:
-            $ref: '#/definitions/main.mErrorResponse'
+            $ref: '#/definitions/controller.mErrorResponse'
         "500":
           description: Ошибка подключения к серверу
           schema:
-            $ref: '#/definitions/main.mErrorResponse'
+            $ref: '#/definitions/controller.mErrorResponse'
       security:
       - BearerAuth: []
       summary: Get Geo Coordinates by Address
@@ -273,7 +273,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/main.TakeBookRequest'
+          $ref: '#/definitions/controller.TakeBookRequest'
       produces:
       - application/json
       responses:
@@ -284,11 +284,11 @@ paths:
         "400":
           description: Ошибка запроса
           schema:
-            $ref: '#/definitions/main.mErrorResponse'
+            $ref: '#/definitions/controller.mErrorResponse'
         "500":
           description: Ошибка подключения к серверу
           schema:
-            $ref: '#/definitions/main.mErrorResponse'
+            $ref: '#/definitions/controller.mErrorResponse'
       security:
       - BearerAuth: []
       summary: Get Geo Coordinates by Address
@@ -336,7 +336,7 @@ paths:
         "404":
           description: No authors found
           schema:
-            $ref: '#/definitions/main.mErrorResponse'
+            $ref: '#/definitions/controller.mErrorResponse'
       summary: Get all authors
       tags:
       - Authors

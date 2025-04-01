@@ -28,7 +28,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.AuthorRequest"
+                            "$ref": "#/definitions/controller.AuthorRequest"
                         }
                     }
                 ],
@@ -42,13 +42,13 @@
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     }
                 }
@@ -87,13 +87,13 @@
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     }
                 }
@@ -138,7 +138,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.TakeBookRequest"
+                            "$ref": "#/definitions/controller.TakeBookRequest"
                         }
                     }
                 ],
@@ -152,13 +152,13 @@
                     "400": {
                         "description": "Ошибка запроса",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Ошибка подключения к серверу",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     }
                 }
@@ -203,7 +203,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.TakeBookRequest"
+                            "$ref": "#/definitions/controller.TakeBookRequest"
                         }
                     }
                 ],
@@ -217,13 +217,13 @@
                     "400": {
                         "description": "Ошибка запроса",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Ошибка подключения к серверу",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     }
                 }
@@ -277,19 +277,19 @@
                     "400": {
                         "description": "Ошибка запроса",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Книга не найдена",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Ошибка сервера",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     }
                 }
@@ -359,7 +359,7 @@
                     "404": {
                         "description": "No authors found",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     }
                 }
@@ -570,7 +570,7 @@
                 }
             }
         },
-        "main.AuthorRequest": {
+        "controller.AuthorRequest": {
             "type": "object",
             "properties": {
                 "name": {
@@ -578,7 +578,7 @@
                 }
             }
         },
-        "main.TakeBookRequest": {
+        "controller.TakeBookRequest": {
             "type": "object",
             "properties": {
                 "username": {
@@ -587,7 +587,7 @@
                 }
             }
         },
-        "main.mErrorResponse": {
+        "controller.mErrorResponse": {
             "type": "object",
             "properties": {
                 "200": {

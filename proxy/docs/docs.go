@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.AuthorRequest"
+                            "$ref": "#/definitions/controller.AuthorRequest"
                         }
                     }
                 ],
@@ -49,13 +49,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     }
                 }
@@ -94,13 +94,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     }
                 }
@@ -145,7 +145,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.TakeBookRequest"
+                            "$ref": "#/definitions/controller.TakeBookRequest"
                         }
                     }
                 ],
@@ -159,13 +159,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Ошибка запроса",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Ошибка подключения к серверу",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     }
                 }
@@ -210,7 +210,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.TakeBookRequest"
+                            "$ref": "#/definitions/controller.TakeBookRequest"
                         }
                     }
                 ],
@@ -224,13 +224,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Ошибка запроса",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Ошибка подключения к серверу",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     }
                 }
@@ -284,19 +284,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Ошибка запроса",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Книга не найдена",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Ошибка сервера",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     }
                 }
@@ -366,7 +366,7 @@ const docTemplate = `{
                     "404": {
                         "description": "No authors found",
                         "schema": {
-                            "$ref": "#/definitions/main.mErrorResponse"
+                            "$ref": "#/definitions/controller.mErrorResponse"
                         }
                     }
                 }
@@ -577,7 +577,7 @@ const docTemplate = `{
                 }
             }
         },
-        "main.AuthorRequest": {
+        "controller.AuthorRequest": {
             "type": "object",
             "properties": {
                 "name": {
@@ -585,7 +585,7 @@ const docTemplate = `{
                 }
             }
         },
-        "main.TakeBookRequest": {
+        "controller.TakeBookRequest": {
             "type": "object",
             "properties": {
                 "username": {
@@ -594,7 +594,7 @@ const docTemplate = `{
                 }
             }
         },
-        "main.mErrorResponse": {
+        "controller.mErrorResponse": {
             "type": "object",
             "properties": {
                 "200": {

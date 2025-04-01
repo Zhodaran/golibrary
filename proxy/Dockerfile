@@ -23,7 +23,6 @@ FROM alpine:latest
 COPY --from=builder /app/main /main
 COPY --from=builder /app/.env /.env
 
-
 # Открываем порт 8080
 EXPOSE 8080
 
