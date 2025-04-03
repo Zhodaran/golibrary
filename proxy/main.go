@@ -3,31 +3,23 @@ package main
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
-	"github.com/brianvoe/gofakeit"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 	_ "studentgit.kata.academy/Zhodaran/go-kata/docs"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/v5/middleware"
-	httpSwagger "github.com/swaggo/http-swagger"
 	"studentgit.kata.academy/Zhodaran/go-kata/controller"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/auth"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/control"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/repository"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/router"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/service"
 )
 
@@ -72,13 +64,12 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	connStr := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_NAME"),
-	)
+	db, err := initDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
 	fmt.Println("DB_USER:", os.Getenv("DB_USER"))
 	fmt.Println("DB_PASSWORD:", os.Getenv("DB_PASSWORD"))
 	fmt.Println("DB_NAME:", os.Getenv("DB_NAME"))
@@ -86,18 +77,13 @@ func main() {
 	fmt.Println("DB_PORT:", os.Getenv("DB_PORT"))
 	fmt.Println("Запуск задержки")
 	time.Sleep(10 * time.Second)
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
 
 	if err := db.Ping(); err != nil {
 		log.Fatal("Cannot connect to the database:", err)
 	}
 
-	runMigrations(db)
-	books := createTableBook(db)
+	control.RunMigrations(db)
+	books := control.CreateTableBook(db)
 	library := controller.NewLibrary()
 
 	library.AddBooks(books)
@@ -111,7 +97,7 @@ func main() {
 
 	geoService := service.NewGeoService("d9e0649452a137b73d941aa4fb4fcac859372c8c", "ec99b849ebf21277ec821c63e1a2bc8221900b1d") // Создаем новый экземпляр GeoService
 	resp := controller.NewResponder(logger)
-	r := router(bookController, userController, resp, geoService, db, &books, library)
+	r := router.Router(bookController, userController, resp, geoService, db, &books, library)
 
 	srv := &Server{
 		Server: http.Server{
@@ -124,6 +110,21 @@ func main() {
 
 	go srv.Serve()
 
+	waitForShutdown(srv)
+}
+
+func initDB() (*sql.DB, error) {
+	connStr := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_NAME"),
+	)
+	return sql.Open("postgres", connStr)
+}
+
+func waitForShutdown(srv *Server) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
@@ -131,134 +132,8 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		fmt.Printf("Ошибка при завершении работы: %v\n", err)
+		log.Printf("Error shutting down server: %v\n", err)
 	} else {
 		log.Println("Server stopped gracefully")
 	}
-}
-
-func runMigrations(db *sql.DB) {
-	migrationSQL := `
-	CREATE TABLE IF NOT EXISTS users (
-		id SERIAL PRIMARY KEY,
-		name VARCHAR(50) NOT NULL,
-		email VARCHAR(255) NOT NULL,
-		deleted_at TIMESTAMP NULL
-	);`
-
-	_, err := db.Exec(migrationSQL)
-	if err != nil {
-		log.Fatalf("Error running migrations: %v", err)
-	}
-}
-
-func createTableBook(db *sql.DB) []repository.Book {
-	table := ` 
-	CREATE TABLE IF NOT EXISTS book (
-		index SERIAL PRIMARY KEY,
-		book VARCHAR(50) NOT NULL,
-		author VARCHAR(255) NOT NULL,
-		block BOOLEAN,
-		take_count INT DEFAULT 0
-	);`
-
-	var authors []string
-	for i := 0; i < 10; i++ {
-		author := gofakeit.Name()
-		authors = append(authors, author)
-	}
-	_, err := db.Exec(table)
-	if err != nil {
-		log.Fatalf("Error running migrations: %v", err)
-	}
-	var books []repository.Book
-	for i := 1; i < 101; i++ {
-		block := false
-		book := repository.Book{
-			Index:     i,
-			Book:      gofakeit.Sentence(1),                        // Генерация названия книги
-			Author:    authors[gofakeit.Number(0, len(authors)-1)], // Случайный автор
-			Block:     &block,                                      // Устанавливаем значение блокировки
-			TakeCount: 0,                                           // Начальное значение take_count
-		}
-		books = append(books, book) // Добавляем книгу в массив
-	}
-
-	// Вставка книг в базу данных
-	for _, b := range books {
-		_, err := db.Exec("INSERT INTO book (book, author, block) VALUES ($1, $2, $3)", b.Book, b.Author, b.Block)
-		if err != nil {
-			log.Fatalf("Error inserting book: %v", err)
-		}
-	}
-
-	return books
-
-}
-
-func proxyMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/api") {
-			next.ServeHTTP(w, r)
-			return
-		}
-		proxyURL, _ := url.Parse("http://hugo:1313")
-		proxy := httputil.NewSingleHostReverseProxy(proxyURL)
-		proxy.ServeHTTP(w, r)
-	})
-}
-
-func TokenAuthMiddleware(resp controller.Responder) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			token := r.Header.Get("Authorization")
-			if token == "" {
-				resp.ErrorUnauthorized(w, errors.New("missing authorization token"))
-				return
-			}
-
-			token = strings.TrimPrefix(token, "Bearer ")
-
-			_, err := auth.TokenAuth.Decode(token)
-			if err != nil {
-				resp.ErrorUnauthorized(w, err)
-				return
-			}
-
-			next.ServeHTTP(w, r)
-		})
-	}
-}
-
-func router(bookController *control.BookController, userController *control.UserController, resp controller.Responder, geoService service.GeoProvider, db *sql.DB, books *[]repository.Book, library *controller.Library) http.Handler {
-	r := chi.NewRouter()
-	auth.GenerateUsers(50)
-	r.Use(middleware.Logger)
-	r.Use(proxyMiddleware)
-	r.Get("/swagger/*", httpSwagger.WrapHandler)
-	r.Post("/api/register", auth.Register)
-	r.Post("/api/login", auth.Login)
-	r.Post("/api/users", userController.CreateUser)        // Создание пользователя
-	r.Get("/api/users/{id}", userController.GetUser)       // Получение пользователя по ID
-	r.Put("/api/users/{id}", userController.UpdateUser)    // Обновление пользователя
-	r.Delete("/api/users/{id}", userController.DeleteUser) // Удаление пользователя
-	r.Get("/api/users", userController.ListUsers)
-
-	r.Post("/api/book/take/{index}", controller.TakeBookHandler(resp, db, books, library))
-	r.Delete("/api/book/return/{index}", controller.ReturnBook(resp, db, books, library))
-	r.Get("/api/users", auth.ListUsersHandler(resp))
-
-	r.Post("/api/authors", controller.AddAuthorHandler(resp, library))
-
-	r.Post("/api/book", controller.AddBookHandler(resp, db, library, books))
-	r.Get("/api/books", bookController.ListBook)
-	r.Put("/api/book/{index}", controller.UpdateBook(resp, db))
-	r.Get("/api/author", controller.ListAuthorsHandler(resp, library))
-	r.Get("/api/get-authors", controller.GetAuthorsHandler(resp, library))
-
-	// Используем обработчики с middleware
-	r.With(TokenAuthMiddleware(resp)).Post("/api/address/geocode", controller.GeocodeHandler(resp, geoService))
-	r.With(TokenAuthMiddleware(resp)).Post("/api/address/search", controller.SearchHandler(resp, geoService))
-
-	return r
 }
