@@ -14,7 +14,7 @@ RUN go mod download
 COPY . ./
 
 # Собираем приложение
-RUN go build -o main .
+RUN go build -o main ./app
 
 # Начинаем новую стадию сборки на основе минимального образа
 FROM alpine:latest
