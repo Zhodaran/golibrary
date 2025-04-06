@@ -17,10 +17,10 @@ import (
 	_ "studentgit.kata.academy/Zhodaran/go-kata/docs"
 
 	"studentgit.kata.academy/Zhodaran/go-kata/controller"
+	"studentgit.kata.academy/Zhodaran/go-kata/internal/bd"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/control"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/repository"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/router"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/service"
 )
 
 // @title Address API
@@ -35,12 +35,6 @@ import (
 // @RequestAddressSearch представляет запрос для поиска
 // @Description Этот эндпоинт позволяет получить адрес по наименованию
 // @Param address body ResponseAddress true "Географические координаты"
-
-type mErrorResponse struct {
-	BadRequest      string `json:"400"`
-	DadataBad       string `json:"500"`
-	SuccefulRequest string `json:"200"`
-}
 
 // TokenResponse представляет ответ с токеном
 
@@ -82,8 +76,8 @@ func main() {
 		log.Fatal("Cannot connect to the database:", err)
 	}
 
-	control.RunMigrations(db)
-	books := control.CreateTableBook(db)
+	bd.RunMigrations(db)
+	books := bd.CreateTableBook(db)
 	library := controller.NewLibrary()
 
 	library.AddBooks(books)
@@ -95,9 +89,8 @@ func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 
-	geoService := service.NewGeoService("d9e0649452a137b73d941aa4fb4fcac859372c8c", "ec99b849ebf21277ec821c63e1a2bc8221900b1d") // Создаем новый экземпляр GeoService
 	resp := controller.NewResponder(logger)
-	r := router.Router(bookController, userController, resp, geoService, db, &books, library)
+	r := router.Router(bookController, userController, resp, db, &books, library)
 
 	srv := &Server{
 		Server: http.Server{

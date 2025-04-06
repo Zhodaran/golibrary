@@ -19,6 +19,11 @@ type Book struct {
 	TakeCount int    `json:"take_count"`
 }
 
+type AddaderBook struct {
+	Book   string `json:"book"`
+	Author string `json:"author"`
+}
+
 // UserRepository определяет методы для работы с пользователями
 type UserRepository interface {
 	Create(ctx context.Context, user User) error

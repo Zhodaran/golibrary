@@ -49,6 +49,14 @@ definitions:
       name:
         type: string
     type: object
+  controller.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   controller.TakeBookRequest:
     properties:
       username:
@@ -64,6 +72,13 @@ definitions:
       "500":
         type: string
     type: object
+  repository.AddaderBook:
+    properties:
+      author:
+        type: string
+      book:
+        type: string
+    type: object
   repository.Book:
     properties:
       author:
@@ -76,29 +91,6 @@ definitions:
         type: integer
       take_count:
         type: integer
-    type: object
-  service.Address:
-    properties:
-      city:
-        type: string
-      geo_lat:
-        type: string
-      geo_lon:
-        type: string
-      house:
-        type: string
-      street:
-        type: string
-    type: object
-  service.ResponseAddress:
-    properties:
-      suggestions:
-        items:
-          properties:
-            data:
-              $ref: '#/definitions/service.Address'
-          type: object
-        type: array
     type: object
 host: localhost:8080
 info:
@@ -147,7 +139,7 @@ paths:
         in: body
         name: book
         schema:
-          $ref: '#/definitions/repository.Book'
+          $ref: '#/definitions/repository.AddaderBook'
       produces:
       - application/json
       responses:
@@ -238,7 +230,7 @@ paths:
         "200":
           description: Успешное выполнение
           schema:
-            $ref: '#/definitions/service.ResponseAddress'
+            $ref: '#/definitions/controller.Response'
         "400":
           description: Ошибка запроса
           schema:
@@ -280,7 +272,7 @@ paths:
         "200":
           description: Успешное выполнение
           schema:
-            $ref: '#/definitions/service.ResponseAddress'
+            $ref: '#/definitions/controller.Response'
         "400":
           description: Ошибка запроса
           schema:

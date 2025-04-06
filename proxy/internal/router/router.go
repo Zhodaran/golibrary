@@ -10,16 +10,13 @@ import (
 	"studentgit.kata.academy/Zhodaran/go-kata/controller"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/auth"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/control"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/middle"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/repository"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/service"
 )
 
-func Router(bookController *control.BookController, userController *control.UserController, resp controller.Responder, geoService service.GeoProvider, db *sql.DB, books *[]repository.Book, library *controller.Library) http.Handler {
+func Router(bookController *control.BookController, userController *control.UserController, resp controller.Responder, db *sql.DB, books *[]repository.Book, library *controller.Library) http.Handler {
 	r := chi.NewRouter()
 	auth.GenerateUsers(50)
 	r.Use(middleware.Logger)
-	r.Use(middle.ProxyMiddleware)
 	r.Get("/swagger/*", httpSwagger.WrapHandler)
 	r.Post("/api/register", auth.Register)
 	r.Post("/api/login", auth.Login)
@@ -42,8 +39,6 @@ func Router(bookController *control.BookController, userController *control.User
 	r.Get("/api/get-authors", controller.GetAuthorsHandler(resp, library))
 
 	// Используем обработчики с middleware
-	r.With(middle.TokenAuthMiddleware(resp)).Post("/api/address/geocode", controller.GeocodeHandler(resp, geoService))
-	r.With(middle.TokenAuthMiddleware(resp)).Post("/api/address/search", controller.SearchHandler(resp, geoService))
 
 	return r
 }

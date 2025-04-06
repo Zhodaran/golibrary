@@ -13,7 +13,6 @@ import (
 	"github.com/go-chi/chi"
 	"go.uber.org/zap"
 	"studentgit.kata.academy/Zhodaran/go-kata/internal/repository"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/service"
 )
 
 type Response struct {
@@ -187,42 +186,6 @@ func (r *Respond) ErrorInternal(w http.ResponseWriter, err error) {
 	}
 }
 
-func GeocodeHandler(resp Responder, geoService service.GeoProvider) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var req GeocodeRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			resp.ErrorBadRequest(w, err)
-			return
-		}
-
-		geo, err := geoService.GetGeoCoordinatesGeocode(req.Lat, req.Lng)
-		if err != nil {
-			resp.ErrorInternal(w, err)
-			return
-		}
-
-		resp.OutputJSON(w, geo)
-	}
-}
-
-func SearchHandler(resp Responder, geoService service.GeoProvider) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var req RequestAddressSearch
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			resp.ErrorBadRequest(w, err)
-			return
-		}
-
-		geo, err := geoService.GetGeoCoordinatesAddress(req.Query)
-		if err != nil {
-			resp.ErrorInternal(w, err)
-			return
-		}
-
-		resp.OutputJSON(w, geo)
-	}
-}
-
 type TakeBookRequest struct {
 	Username string `json:"username"` // Поле для имени пользователя
 }
@@ -235,7 +198,7 @@ type TakeBookRequest struct {
 // @Param index path int true "Book INDEX"
 // @Param Authorization header string true "Bearer Token"
 // @Param body body TakeBookRequest true "Request body"
-// @Success 200 {object} service.ResponseAddress "Успешное выполнение"
+// @Success 200 {object} Response "Успешное выполнение"
 // @Failure 400 {object} mErrorResponse "Ошибка запроса"
 // @Failure 500 {object} mErrorResponse "Ошибка подключения к серверу"
 // @Security BearerAuth
@@ -307,7 +270,7 @@ func TakeBookHandler(resp Responder, db *sql.DB, Books *[]repository.Book, libra
 // @Param index path int true "Book INDEX"
 // @Param Authorization header string true "Bearer Token"
 // @Param body body TakeBookRequest true "Request body"
-// @Success 200 {object} service.ResponseAddress "Успешное выполнение"
+// @Success 200 {object} Response "Успешное выполнение"
 // @Failure 400 {object} mErrorResponse "Ошибка запроса"
 // @Failure 500 {object} mErrorResponse "Ошибка подключения к серверу"
 // @Security BearerAuth
@@ -454,22 +417,22 @@ func ListAuthorsHandler(resp Responder, library *Library) http.HandlerFunc {
 // @Tags Books
 // @Accept json
 // @Produce json
-// @Param book body repository.Book false "Book details"
+// @Param book body repository.AddaderBook false "Book details"
 // @Success 201 {object} repository.Book "Book added successfully"
 // @Failure 400 {object} mErrorResponse "Invalid request"
 // @Failure 500 {object} mErrorResponse "Internal server error"
 // @Router /api/book [post]
 func AddBookHandler(resp Responder, db *sql.DB, library *Library, Books *[]repository.Book) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var newBook repository.Book
-		if err := json.NewDecoder(r.Body).Decode(&newBook); err != nil {
+		var addaderBook repository.AddaderBook
+		if err := json.NewDecoder(r.Body).Decode(&addaderBook); err != nil {
 			resp.ErrorBadRequest(w, errors.New("invalid request body"))
 			return
 		}
 
 		// Проверка на существование книги
 		var exists bool
-		err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM book WHERE book = $1 AND author = $2)", newBook.Book, newBook.Author).Scan(&exists)
+		err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM book WHERE book = $1 AND author = $2)", addaderBook.Book, addaderBook.Author).Scan(&exists)
 		if err != nil {
 			resp.ErrorInternal(w, err)
 			return
@@ -478,6 +441,10 @@ func AddBookHandler(resp Responder, db *sql.DB, library *Library, Books *[]repos
 			resp.ErrorBadRequest(w, errors.New("book already exists"))
 			return
 		}
+
+		var newBook repository.Book
+		newBook.Book = addaderBook.Book
+		newBook.Author = addaderBook.Author
 
 		bloc := false
 		newBook.Block = &bloc
@@ -488,6 +455,12 @@ func AddBookHandler(resp Responder, db *sql.DB, library *Library, Books *[]repos
 			resp.ErrorInternal(w, err)
 			return
 		}
+		bookPtr := &Books
+
+		// Получаем последний элемент
+		lastElement := (**bookPtr)[len(**bookPtr)-1].Index
+		newBook.Index = lastElement + 1
+
 		library.AddBook(newBook)
 		*Books = append(*Books, newBook)
 		resp.OutputJSON(w, newBook) // Возвращаем добавленную книгу

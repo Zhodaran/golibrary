@@ -80,7 +80,7 @@ const docTemplate = `{
                         "name": "book",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/repository.Book"
+                            "$ref": "#/definitions/repository.AddaderBook"
                         }
                     }
                 ],
@@ -153,7 +153,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Успешное выполнение",
                         "schema": {
-                            "$ref": "#/definitions/service.ResponseAddress"
+                            "$ref": "#/definitions/controller.Response"
                         }
                     },
                     "400": {
@@ -218,7 +218,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Успешное выполнение",
                         "schema": {
-                            "$ref": "#/definitions/service.ResponseAddress"
+                            "$ref": "#/definitions/controller.Response"
                         }
                     },
                     "400": {
@@ -585,6 +585,18 @@ const docTemplate = `{
                 }
             }
         },
+        "controller.Response": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "controller.TakeBookRequest": {
             "type": "object",
             "properties": {
@@ -608,6 +620,17 @@ const docTemplate = `{
                 }
             }
         },
+        "repository.AddaderBook": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "book": {
+                    "type": "string"
+                }
+            }
+        },
         "repository.Book": {
             "type": "object",
             "properties": {
@@ -625,42 +648,6 @@ const docTemplate = `{
                 },
                 "take_count": {
                     "type": "integer"
-                }
-            }
-        },
-        "service.Address": {
-            "type": "object",
-            "properties": {
-                "city": {
-                    "type": "string"
-                },
-                "geo_lat": {
-                    "type": "string"
-                },
-                "geo_lon": {
-                    "type": "string"
-                },
-                "house": {
-                    "type": "string"
-                },
-                "street": {
-                    "type": "string"
-                }
-            }
-        },
-        "service.ResponseAddress": {
-            "type": "object",
-            "properties": {
-                "suggestions": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "data": {
-                                "$ref": "#/definitions/service.Address"
-                            }
-                        }
-                    }
                 }
             }
         }
