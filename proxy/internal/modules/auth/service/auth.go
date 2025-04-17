@@ -1,41 +1,14 @@
-package auth
+package service
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/brianvoe/gofakeit"
-	"github.com/go-chi/jwtauth"
-	"studentgit.kata.academy/Zhodaran/go-kata/controller"
+	"studentgit.kata.academy/Zhodaran/go-kata/proxy/controller"
 )
-
-type LoginResponse struct {
-	Message string `json:"message"`
-}
-
-type TokenResponse struct {
-	Token string `json:"token"`
-}
-
-type ErrorResponse struct {
-	BadRequest      string `json:"400"`
-	DadataBad       string `json:"500"`
-	SuccefulRequest string `json:"200"`
-}
-
-var (
-	TokenAuth = jwtauth.New("HS256", []byte("your_secret_key"), nil)
-	Users     = make(map[string]User) // Хранение пользователей
-	mu        sync.Mutex
-)
-
-type User struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
 
 // @Summary Register a new user
 // @Description This endpoint allows you to register a new user with a username and password.

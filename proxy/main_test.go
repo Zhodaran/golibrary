@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -50,7 +49,7 @@ func TestGeocodeAddress(t *testing.T) {
 	dadataAPIkey = "mocked_api_key" // Убедитесь, что ваш ключ не используется в тестах
 	originalURL := "https://dadata.ru/api/v2/geocode"
 	defer func() { originalURL = "https://dadata.ru/api/v2/geocode" }() // Восстанавливаем оригинальный URL
-	originalURL = ts.URL // Заменяем на тестовый сервер
+	originalURL = ts.URL                                                // Заменяем на тестовый сервер
 
 	// Тестируем функцию
 	addresses, err := geocodeAddress("55.7558", "37.6173")

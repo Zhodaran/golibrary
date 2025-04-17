@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"studentgit.kata.academy/Zhodaran/go-kata/controller"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/auth"
+	"studentgit.kata.academy/Zhodaran/go-kata/proxy/controller"
+	"studentgit.kata.academy/Zhodaran/go-kata/proxy/internal/modules/auth/service"
 )
 
 func TokenAuthMiddleware(resp controller.Responder) func(http.Handler) http.Handler {
@@ -20,7 +20,7 @@ func TokenAuthMiddleware(resp controller.Responder) func(http.Handler) http.Hand
 
 			token = strings.TrimPrefix(token, "Bearer ")
 
-			_, err := auth.TokenAuth.Decode(token)
+			_, err := service.TokenAuth.Decode(token)
 			if err != nil {
 				resp.ErrorUnauthorized(w, err)
 				return

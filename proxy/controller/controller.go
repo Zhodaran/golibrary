@@ -12,7 +12,8 @@ import (
 
 	"github.com/go-chi/chi"
 	"go.uber.org/zap"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/repository"
+	"studentgit.kata.academy/Zhodaran/go-kata/config"
+	"studentgit.kata.academy/Zhodaran/go-kata/proxy/internal/models"
 )
 
 type Response struct {
@@ -45,7 +46,7 @@ type Responder interface {
 	ErrorInternal(w http.ResponseWriter, err error)
 }
 
-func (l *Library) AddBook(book repository.Book) {
+func (l *Library) AddBook(book config.Book) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
@@ -90,14 +91,14 @@ func contains(authors []string, author string) bool {
 }
 
 type Library struct {
-	Books   map[string][]repository.Book
+	Books   map[string][]config.Book
 	Authors []string
 	mu      sync.RWMutex
 }
 
 func NewLibrary() *Library {
 	return &Library{
-		Books: make(map[string][]repository.Book),
+		Books: make(map[string][]config.Book),
 	}
 }
 
@@ -105,7 +106,7 @@ type Respond struct {
 	log *zap.Logger
 }
 
-func (l *Library) AddBooks(books []repository.Book) {
+func (l *Library) AddBooks(books []config.Book) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
@@ -203,7 +204,7 @@ type TakeBookRequest struct {
 // @Failure 500 {object} mErrorResponse "Ошибка подключения к серверу"
 // @Security BearerAuth
 // @Router /api/book/take/{index} [post]
-func TakeBookHandler(resp Responder, db *sql.DB, Books *[]repository.Book, library *Library) http.HandlerFunc {
+func TakeBookHandler(resp Responder, db *sql.DB, Books *[]config.Book, library *Library) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		indexStr := chi.URLParam(r, "index")
 		index, err := strconv.Atoi(indexStr)
@@ -219,7 +220,7 @@ func TakeBookHandler(resp Responder, db *sql.DB, Books *[]repository.Book, libra
 			return
 		}
 
-		var bookFind repository.Book
+		var bookFind config.Book
 		found := false
 
 		// Поиск книги по индексу
@@ -275,7 +276,7 @@ func TakeBookHandler(resp Responder, db *sql.DB, Books *[]repository.Book, libra
 // @Failure 500 {object} mErrorResponse "Ошибка подключения к серверу"
 // @Security BearerAuth
 // @Router /api/book/return/{index} [delete]
-func ReturnBook(resp Responder, db *sql.DB, Books *[]repository.Book, library *Library) http.HandlerFunc {
+func ReturnBook(resp Responder, db *sql.DB, Books *[]config.Book, library *Library) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		indexStr := chi.URLParam(r, "index")
 		index, err := strconv.Atoi(indexStr)
@@ -302,7 +303,7 @@ func ReturnBook(resp Responder, db *sql.DB, Books *[]repository.Book, library *L
 		}
 
 		found := false
-		var bookFind repository.Book
+		var bookFind config.Book
 
 		// Поиск книги у пользователя
 		for i, book := range userBooks {
@@ -343,8 +344,8 @@ func ReturnBook(resp Responder, db *sql.DB, Books *[]repository.Book, library *L
 // @Produce json
 // @Param index path int true "Индекс книги"
 // @Param Authorization header string true "Bearer Token"
-// @Param body body repository.Book true "Обновленная информация о книге"
-// @Success 200 {object} repository.Book "Успешное обновление книги"
+// @Param body body models.Book true "Обновленная информация о книге"
+// @Success 200 {object} models.Book "Успешное обновление книги"
 // @Failure 400 {object} mErrorResponse "Ошибка запроса"
 // @Failure 404 {object} mErrorResponse "Книга не найдена"
 // @Failure 500 {object} mErrorResponse "Ошибка сервера"
@@ -363,7 +364,7 @@ func UpdateBook(resp Responder, db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		var updatedBook repository.Book
+		var updatedBook config.Book
 		if err := json.NewDecoder(r.Body).Decode(&updatedBook); err != nil {
 			resp.ErrorBadRequest(w, errors.New("недопустимый формат данных"))
 			return
@@ -418,13 +419,13 @@ func ListAuthorsHandler(resp Responder, library *Library) http.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param book body repository.AddaderBook false "Book details"
-// @Success 201 {object} repository.Book "Book added successfully"
+// @Success 201 {object} models.Book "Book added successfully"
 // @Failure 400 {object} mErrorResponse "Invalid request"
 // @Failure 500 {object} mErrorResponse "Internal server error"
 // @Router /api/book [post]
-func AddBookHandler(resp Responder, db *sql.DB, library *Library, Books *[]repository.Book) http.HandlerFunc {
+func AddBookHandler(resp Responder, db *sql.DB, library *Library, Books *[]config.Book) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var addaderBook repository.AddaderBook
+		var addaderBook models.AddaderBook
 		if err := json.NewDecoder(r.Body).Decode(&addaderBook); err != nil {
 			resp.ErrorBadRequest(w, errors.New("invalid request body"))
 			return
@@ -442,7 +443,7 @@ func AddBookHandler(resp Responder, db *sql.DB, library *Library, Books *[]repos
 			return
 		}
 
-		var newBook repository.Book
+		var newBook config.Book
 		newBook.Book = addaderBook.Book
 		newBook.Author = addaderBook.Author
 

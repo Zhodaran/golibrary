@@ -15,7 +15,7 @@ services:
       - mylocal
       
   app:
-    build: ./proxy
+    build: .
     container_name: proxy
     environment:
       - DB_PASSWORD=${DB_PASSWORD}

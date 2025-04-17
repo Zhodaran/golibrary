@@ -1,17 +1,12 @@
-package bd
+package postgres
 
 import (
 	"database/sql"
 	"log"
 
 	"github.com/brianvoe/gofakeit"
-	"studentgit.kata.academy/Zhodaran/go-kata/internal/repository"
+	"studentgit.kata.academy/Zhodaran/go-kata/config"
 )
-
-type ErrorResponse struct {
-	Message string `json:"message"` // Сообщение об ошибке
-	Code    int    `json:"code"`    // Код ошибки
-}
 
 func RunMigrations(db *sql.DB) {
 	migrationSQL := `
@@ -28,7 +23,7 @@ func RunMigrations(db *sql.DB) {
 	}
 }
 
-func CreateTableBook(db *sql.DB) []repository.Book {
+func CreateTableBook(db *sql.DB) []config.Book {
 	table := ` 
 	CREATE TABLE IF NOT EXISTS book (
 		index SERIAL PRIMARY KEY,
@@ -47,10 +42,10 @@ func CreateTableBook(db *sql.DB) []repository.Book {
 	if err != nil {
 		log.Fatalf("Error running migrations: %v", err)
 	}
-	var books []repository.Book
+	var books []config.Book
 	for i := 1; i < 101; i++ {
 		block := false
-		book := repository.Book{
+		book := config.Book{
 			Index:     i,
 			Book:      gofakeit.Sentence(1),                        // Генерация названия книги
 			Author:    authors[gofakeit.Number(0, len(authors)-1)], // Случайный автор
